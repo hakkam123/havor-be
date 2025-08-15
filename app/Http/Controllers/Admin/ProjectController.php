@@ -13,7 +13,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with(['service', 'client'])->paginate(10);
+        $projects = Project::with(['services', 'client'])->paginate(10);
         return view('admin.projects.index', compact('projects'));
     }
 
@@ -37,7 +37,6 @@ class ProjectController extends Controller
             'status' => 'required|in:planning,in_progress,completed',
         ]);
 
-        // Handle image upload
         if ($request->hasFile('image')) {
             $imageErrors = FileUploadHelper::validateImageFile($request->file('image'));
             if (!empty($imageErrors)) {
@@ -46,11 +45,14 @@ class ProjectController extends Controller
             $validated['image_url'] = FileUploadHelper::uploadImage($request->file('image'), 'projects/images');
         }
 
-        // Set client_name from selected client
         $client = Clients::find($request->client_id);
         $validated['client_name'] = $client->title;
 
-        Project::create($validated);
+        $project = Project::create($validated);
+
+        if ($validated['service_id']) {
+            $project->services()->attach($validated['service_id']);
+        }
 
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project created successfully.');
@@ -58,7 +60,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['service', 'client']);
+        $project->load(['services', 'client']);
         return view('admin.projects.show', compact('project'));
     }
 
@@ -102,6 +104,11 @@ class ProjectController extends Controller
         $validated['client_name'] = $client->title;
 
         $project->update($validated);
+
+        // Update relasi many-to-many berdasarkan service_id baru
+        if ($validated['service_id']) {
+            $project->services()->sync([$validated['service_id']]);
+        }
 
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project updated successfully.');

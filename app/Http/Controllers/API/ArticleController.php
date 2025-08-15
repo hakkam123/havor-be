@@ -33,6 +33,11 @@ class ArticleController extends Controller
         }
 
         $articles = $query->latest()->paginate(10);
+
+        foreach ($articles as $article) {
+            $article->image_url = url('storage/' . $article->image_url);
+        }
+
         return response()->json($articles);
     }
 
@@ -58,10 +63,13 @@ class ArticleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Article $article)
+    public function show($id)
     {
-        return response()->json($article->load(['industry', 'service']));
+        $article = Article::with(['industry', 'service'])->findOrFail($id);
+        $article->image_url = url('storage/' . $article->image_url);
+        return response()->json($article);
     }
+
 
     /**
      * Update the specified resource in storage.

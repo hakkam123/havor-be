@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use App\Models\Project;
 use App\Http\Helpers\FileUploadHelper;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,6 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        // Sorting bisa disesuaikan dengan kolom lain, misalnya 'name' atau 'price'
         $services = Service::orderBy('name')->paginate(10);
         return view('admin.services.index', compact('services'));
     }
@@ -26,14 +26,12 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
+            'short_description' => 'nullable|string|max:500',
             'features' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'duration' => 'nullable|string|max:100',
-            'is_featured' => 'boolean',
             'icon' => 'nullable|image|mimes:jpeg,png,gif,webp,svg|max:' . env('APP_UPLOAD_MAX_SIZE', 2048),
+            'hero_image' => 'nullable|image|mimes:jpeg,png,gif,webp,svg|max:' . env('APP_UPLOAD_MAX_SIZE', 2048),
         ]);
 
-        // Handle icon upload
         if ($request->hasFile('icon')) {
             $iconErrors = FileUploadHelper::validateImageFile($request->file('icon'));
             if (!empty($iconErrors)) {
@@ -42,7 +40,15 @@ class ServiceController extends Controller
             $validated['icon_url'] = FileUploadHelper::uploadImage($request->file('icon'), 'services/icons');
         }
 
-        Service::create($validated);
+        if ($request->hasFile('hero_image')) {
+            $heroErrors = FileUploadHelper::validateImageFile($request->file('hero_image'));
+            if (!empty($heroErrors)) {
+                return back()->withErrors(['hero_image' => $heroErrors])->withInput();
+            }
+            $validated['hero_image'] = FileUploadHelper::uploadImage($request->file('hero_image'), 'services/hero');
+        }
+
+        $service = Service::create($validated);
 
         return redirect()->route('admin.services.index')
                          ->with('success', 'Service created successfully.');
@@ -64,26 +70,36 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
+            'short_description' => 'nullable|string|max:500',
             'features' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'duration' => 'nullable|string|max:100',
-            'is_featured' => 'boolean',
             'icon' => 'nullable|image|mimes:jpeg,png,gif,webp,svg|max:' . env('APP_UPLOAD_MAX_SIZE', 2048),
+            'hero_image' => 'nullable|image|mimes:jpeg,png,gif,webp,svg|max:' . env('APP_UPLOAD_MAX_SIZE', 2048),
         ]);
 
-        // Handle icon upload
         if ($request->hasFile('icon')) {
             $iconErrors = FileUploadHelper::validateImageFile($request->file('icon'));
             if (!empty($iconErrors)) {
                 return back()->withErrors(['icon' => $iconErrors])->withInput();
             }
             
-            // Delete old icon if exists
             if ($service->icon_url) {
                 FileUploadHelper::deleteImage($service->icon_url);
             }
             
             $validated['icon_url'] = FileUploadHelper::uploadImage($request->file('icon'), 'services/icons');
+        }
+
+        if ($request->hasFile('hero_image')) {
+            $heroErrors = FileUploadHelper::validateImageFile($request->file('hero_image'));
+            if (!empty($heroErrors)) {
+                return back()->withErrors(['hero_image' => $heroErrors])->withInput();
+            }
+            
+            if ($service->hero_image) {
+                FileUploadHelper::deleteImage($service->hero_image);
+            }
+            
+            $validated['hero_image'] = FileUploadHelper::uploadImage($request->file('hero_image'), 'services/hero');
         }
 
         $service->update($validated);
@@ -94,9 +110,12 @@ class ServiceController extends Controller
 
     public function destroy(Service $service)
     {
-        // Delete associated icon file
         if ($service->icon_url) {
             FileUploadHelper::deleteImage($service->icon_url);
+        }
+        
+        if ($service->hero_image) {
+            FileUploadHelper::deleteImage($service->hero_image);
         }
         
         $service->delete();

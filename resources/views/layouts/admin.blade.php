@@ -1,243 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>@yield('title', 'Havor Admin')</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
-        body {
-            display: flex;
+        #sidebar.w-20 .sidebar-logo-big { display: none !important; }
+        #sidebar.w-20 .sidebar-logo-small { display: block !important; }
+        #sidebar .sidebar-logo-big { display: block; }
+        #sidebar .sidebar-logo-small { display: none; }
+        #sidebar.w-20 .sidebar-label,
+        #sidebar.w-20 .sidebar-text,
+        #sidebar.w-20 .sidebar-logout-text {
+            display: none !important;
         }
-
-        .sidebar {
-            width: 300px;
-            min-height: 100vh;
-            transition: all 0.3s ease;
-            background-color: #f8f9fa;
-        }
-
-        .sidebar.collapsed {
-            width: 80px;
-        }
-
-        .sidebar .nav-link {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            transition: all 0.2s ease;
-        }
-
-        .sidebar.collapsed .nav-link span {
-            display: none;
-        }
-
-        .sidebar.collapsed .nav-item i {
-            margin-right: 0;
-        }
-
-        .sidebar .nav-item i {
-            margin-right: 10px;
-        }
-
-        .nav-link.active {
-            background-color: #0d6efd;
-            color: white !important;
-        }
-
-        main {
-            flex-grow: 1;
-            padding: 0;
-        }
-
-        .dropdown-toggle::after {
-            float: right;
-            margin-top: 7px;
-        }
-
-        .top-navbar {
-            padding: 10px 20px;
-            background-color: #fff;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .main-wrapper {
-            width: 100%;
-        }
+        html, body { height: 100%; }
+        main { min-height: 100vh; }
+        .card-shadow { box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); }
+        [x-cloak] { display: none !important; }
     </style>
+    @stack('head')
 </head>
-<body>
-    <nav class="sidebar bg-light p-3" id="sidebar">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <span class="fw-bold fs-5">Havor Admin</span>
+<body class="bg-slate-50 antialiased">
+<div class="min-h-screen flex">
+
+    <aside id="sidebar"
+           class="hidden text-sm md:flex md:flex-col w-60 bg-white text-gray-700 transition-all duration-300">
+        <div class="flex items-center justify-center h-20 border-b px-4">
+            <img src="{{ asset('images/havor-besar.jpg') }}" alt="Havor Logo" class="sidebar-logo-big max-h-12 transition-all duration-300" />
+            <img src="{{ asset('images/havor-kecil.jpg') }}" alt="Havor Logo" class="sidebar-logo-small max-h-12 transition-all duration-300" style="display:none;" />
         </div>
-
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link @if(request()->routeIs('admin.dashboard')) active @endif" href="{{ route('admin.dashboard') }}">
-                    <i class="bi bi-house-door"></i> <span>Dashboard</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link @if(request()->routeIs('admin.homepage-features.index')) active @endif" href="{{ route('admin.homepage-features.index') }}">
-                    <i class="bi bi-house"></i> <span>Home</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link"
-                data-bs-toggle="collapse"
-                href="#offeringsSubmenu"
-                role="button"
-                aria-expanded="@if(request()->routeIs('admin.services.*') || request()->routeIs('admin.products.*')) true @else false @endif"
-                aria-controls="offeringsSubmenu">
-                    <i class="bi bi-lightbulb"></i> <span>Offerings</span>
-                </a>
-                <div class="collapse @if(request()->routeIs('admin.services.*') || request()->routeIs('admin.products.*')) show @endif" id="offeringsSubmenu">
-                    <ul class="nav flex-column ms-3">
-                        <li class="nav-item">
-                            <a class="nav-link @if(request()->routeIs('admin.services.*')) active @endif" href="{{ route('admin.services.index') }}">Services</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @if(request()->routeIs('admin.products.*')) active @endif" href="{{ route('admin.products.index') }}">Products</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#workSubmenu" role="button"
-                aria-expanded="@if(request()->routeIs('admin.projects.*') || request()->routeIs('admin.industries.*') || request()->routeIs('admin.clients.*')) true @else false @endif"
-                aria-controls="workSubmenu">
-                    <i class="bi bi-briefcase"></i> <span>Work</span>
-                </a>
-                <div class="collapse @if(request()->routeIs('admin.projects.*') || request()->routeIs('admin.industries.*') || request()->routeIs('admin.clients.*')) show @endif" id="workSubmenu">
-                    <ul class="nav flex-column ms-3">
-                        <li class="nav-item">
-                            <a class="nav-link @if(request()->routeIs('admin.clients.*')) active @endif"
-                            href="{{ route('admin.clients.index') }}">Clients</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @if(request()->routeIs('admin.projects.*')) active @endif"
-                            href="{{ route('admin.projects.index') }}">Projects</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @if(request()->routeIs('admin.industries.*')) active @endif"
-                            href="{{ route('admin.industries.index') }}">Industries</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-
-
-            <li class="nav-item">
-                <a class="nav-link"
-                data-bs-toggle="collapse"
-                href="#insightsSubmenu"
-                role="button"
-                aria-expanded="@if(request()->routeIs('admin.articles.*') || request()->routeIs('admin.leads.*')) true @else false @endif"
-                aria-controls="insightsSubmenu">
-                    <i class="bi bi-bar-chart"></i> <span>Insights & Resources</span>
-                </a>
-                <div class="collapse @if(request()->routeIs('admin.articles.*') || request()->routeIs('admin.leads.*')) show @endif" id="insightsSubmenu">
-                    <ul class="nav flex-column ms-3">
-                        <li class="nav-item">
-                            <a class="nav-link @if(request()->routeIs('admin.articles.*')) active @endif" href="{{ route('admin.articles.index') }}">
-                                Articles
-                            </a>
-                            <a class="nav-link @if(request()->routeIs('admin.leads.*')) active @endif" href="{{ route('admin.leads.index') }}">
-                                Leads
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="javascript:void(0);">
-                    <i class="bi bi-info-circle"></i> <span>About</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <div class="main-wrapper">
-        <nav class="top-navbar navbar navbar-expand-lg navbar-light">
-            <div class="container-fluid">
-                <button class="btn btn-sm btn-outline-secondary" id="sidebarToggle">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbar" aria-controls="topNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse justify-content-end" id="topNavbar">
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ auth()->user()->name }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <form action="{{ route('admin.logout') }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-box-arrow-right"></i> Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        <nav class="flex-1 px-2 py-4 text-sm">
+            <ul class="space-y-1">
+                <li>
+                  <a href="{{ route('admin.dashboard') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.dashboard')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-house-door-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Dashboard</span>
+                  </a>
+                </li>
+                <!-- OFFERINGS GROUP -->
+                <li class="mt-4 mb-1 px-4 text-xs text-slate-400 uppercase tracking-wider select-none sidebar-label">Offerings</li>
+                <li>
+                  <a href="{{ route('admin.services.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.services.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-lightbulb-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Services</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('admin.products.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.products.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-grid-1x2-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Products</span>
+                  </a>
+                </li>
+                <!-- WORK GROUP -->
+                <li class="mt-4 mb-1 px-4 text-xs text-slate-400 uppercase tracking-wider select-none sidebar-label">Work</li>
+                <li>
+                  <a href="{{ route('admin.clients.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.clients.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-people-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Clients</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('admin.projects.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.projects.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-briefcase-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Projects</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('admin.industries.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.industries.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-building text-xl"></i>
+                      <span class="sidebar-text truncate">Industries</span>
+                  </a>
+                </li>
+                <!-- INSIGHTS GROUP -->
+                <li class="mt-4 mb-1 px-4 text-xs text-slate-400 uppercase tracking-wider select-none sidebar-label">Insights & Resources</li>
+                <li>
+                  <a href="{{ route('admin.articles.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.articles.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-bar-chart-line-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Articles</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="{{ route('admin.leads.index') }}"
+                     class="flex items-center gap-3 px-3 py-2 rounded-lg
+                     @if(request()->routeIs('admin.leads.*')) bg-[#4783cc] text-white font-semibold @else hover:bg-slate-100 @endif">
+                      <i class="bi bi-envelope-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Leads</span>
+                  </a>
+                </li>
+                <!-- PAGES (DISABLED/PLACEHOLDER) -->
+                <li class="mt-4 mb-1 px-4 text-xs text-slate-400 uppercase tracking-wider select-none sidebar-label">Pages</li>
+                <li>
+                  <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 bg-slate-100 cursor-not-allowed opacity-70 pointer-events-none">
+                      <i class="bi bi-file-earmark-fill text-xl"></i>
+                      <span class="sidebar-text truncate">Pages</span>
+                  </a>
+                </li>
+            </ul>
         </nav>
+        <div class="px-4 pb-6 border-t flex items-center sidebar-logout">
+            <form method="POST" action="{{ route('admin.logout') }}" class="w-full">
+                @csrf
+                <button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 flex items-center gap-2">
+                    <i class="bi bi-box-arrow-right me-2"></i>
+                    <span class="sidebar-logout-text">Logout</span>
+                </button>
+            </form>
+        </div>
+    </aside>
 
-        <main class="p-4">
-            <div class="d-flex justify-content-between align-items-center pb-3 border-bottom">
-                {{-- <h1 class="h4">@yield('page-title', 'Dashboard')</h1> --}}
-                @yield('page-actions')
+    <!-- MOBILE SIDEBAR (tidak berubah dari sebelumnya, silakan sesuaikan jika perlu) -->
+    <div class="md:hidden fixed top-0 left-0 right-0 z-30">
+      <div class="flex items-center justify-between bg-white px-3 py-2 shadow">
+          <div class="flex items-center gap-2">
+              <button id="mobileOpenSidebar" class="p-2 rounded bg-slate-100">
+                  <i class="bi bi-list"></i>
+              </button>
+              <span class="font-semibold">Havor Admin</span>
+          </div>
+          <div>
+              <div class="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <i class="bi bi-person-circle"></i>
+                  <span>{{ auth()->user()->name }}</span>
+              </div>
+          </div>
+      </div>
+    </div>
+
+    <div id="mobileSidebar" class="fixed inset-0 z-40 hidden">
+      <div class="absolute inset-0 bg-black/50" id="mobileSidebarBackdrop"></div>
+      <aside class="absolute left-0 top-0 bottom-0 w-72 bg-white text-gray-700 p-4 overflow-auto">
+          <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded bg-slate-100 flex items-center justify-center">
+                      <i class="bi bi-kanban-fill"></i>
+                  </div>
+                  <span class="font-semibold">Havor Admin</span>
+              </div>
+              <button id="mobileCloseSidebar" class="p-1 rounded bg-slate-100">
+                  <i class="bi bi-x-lg"></i>
+              </button>
+          </div>
+          <nav>
+            <ul class="space-y-2 text-sm">
+              <li><a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Dashboard</a></li>
+              <li><a href="{{ route('admin.services.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Services</a></li>
+              <li><a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Products</a></li>
+              <li><a href="{{ route('admin.clients.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Clients</a></li>
+              <li><a href="{{ route('admin.projects.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Projects</a></li>
+              <li><a href="{{ route('admin.industries.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Industries</a></li>
+              <li><a href="{{ route('admin.articles.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Articles</a></li>
+              <li><a href="{{ route('admin.leads.index') }}" class="block px-3 py-2 rounded hover:bg-slate-100">Leads</a></li>
+            </ul>
+          </nav>
+      </aside>
+    </div>
+
+    <div class="flex-1 min-h-screen flex flex-col">
+        <header class="h-20 bg-white flex items-center px-4">
+            <button id="sidebarToggle" class="p-2 rounded hover:bg-slate-100 mr-4">
+                <i class="bi bi-list text-2xl text-slate-700"></i>
+            </button>
+            <div class="flex-1 flex items-center">
+                <span class="text-xl font-bold text-slate-700">@yield('page-title','Dashboard')</span>
             </div>
+            <div class="flex items-center gap-4">
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-50 text-slate-700">
+                        <i class="bi bi-person-circle text-2xl"></i>
+                        <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition
+                         class="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-50 border border-slate-100">
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100">
+                                <i class="bi bi-box-arrow-right me-2"></i> Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </header>
 
+        <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
             @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle"></i> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="mb-4">
+                    <div class="rounded-md bg-emerald-50 p-3 text-emerald-800">{{ session('success') }}</div>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle"></i> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="mb-4">
+                    <div class="rounded-md bg-red-50 p-3 text-red-700">{{ session('error') }}</div>
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="mb-4">
+                    <div class="rounded-md bg-red-50 p-3 text-red-700">
+                        <ul class="list-disc pl-5">
+                            @foreach($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             @endif
 
             @yield('content')
         </main>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('sidebarToggle').addEventListener('click', function () {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        });
-    </script>
-    @stack('scripts')
+<script>
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar = document.getElementById('sidebar');
+sidebarToggle?.addEventListener('click', () => {
+    sidebar.classList.toggle('w-20');
+    sidebar.classList.toggle('w-60');
+    sidebar.classList.toggle('collapsed');
+});
+const mobileOpenBtn = document.getElementById('mobileOpenSidebar');
+const mobileSidebar = document.getElementById('mobileSidebar');
+const mobileBackdrop = document.getElementById('mobileSidebarBackdrop');
+const mobileClose = document.getElementById('mobileCloseSidebar');
+
+mobileOpenBtn?.addEventListener('click', () => mobileSidebar.classList.remove('hidden'));
+mobileBackdrop?.addEventListener('click', () => mobileSidebar.classList.add('hidden'));
+mobileClose?.addEventListener('click', () => mobileSidebar.classList.add('hidden'));
+</script>
+
+@stack('scripts')
 </body>
 </html>

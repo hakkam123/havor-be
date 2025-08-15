@@ -1,171 +1,84 @@
-{{-- @extends('layouts.admin')
-
-@section('title', 'Services - Havor Admin')
-@section('page-title', 'Services Management')
-
-@section('page-actions')
-    <a href="{{ route('admin.services.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add New Service
-    </a>
-@endsection
-
-@section('content')
-<div class="card shadow">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">
-            <i class="bi bi-tools"></i> All Services
-        </h6>
-    </div>
-    <div class="card-body">
-        @if($services->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th width="80">Order</th>
-                            <th>Title</th>
-                            <th>Description</th>
-                            <th width="100">Icon</th>
-                            <th width="200">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($services as $service)
-                            <tr>
-                                <td>
-                                    <span class="badge bg-primary">{{ $service->order_index }}</span>
-                                </td>
-                                <td>{{ $service->title }}</td>
-                                <td>{{ Str::limit($service->description, 100) }}</td>
-                                <td class="text-center">
-                                    @if($service->icon_url)
-                                        <img src="{{ $service->icon_url }}" alt="Icon" width="40" height="40" class="rounded">
-                                    @else
-                                        <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
-                                    @endif
-                                </td>
-                                <td>
-                                    <a href="{{ route('admin.services.show', $service) }}" class="btn btn-sm btn-info">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.services.edit', $service) }}" class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="{{ route('admin.services.destroy', $service) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" 
-                                                onclick="return confirm('Are you sure you want to delete this service?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="d-flex justify-content-center">
-                {{ $services->links() }}
-            </div>
-        @else
-            <div class="text-center py-5">
-                <i class="bi bi-tools text-muted" style="font-size: 4rem;"></i>
-                <h4 class="text-muted mt-3">No Services Found</h4>
-                <p class="text-muted">Start by creating your first service.</p>
-                <a href="{{ route('admin.services.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Add First Service
-                </a>
-            </div>
-        @endif
-    </div>
-</div>
-@endsection --}}
-
 @extends('layouts.admin')
 
 @section('title', 'Services - Havor Admin')
 @section('page-title', 'Services Management')
 
-@section('page-actions')
-    <a href="{{ route('admin.services.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add New Service
-    </a>
-@endsection
-
 @section('content')
-<div class="card shadow">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">
-            <i class="bi bi-tools"></i> All Services
-        </h6>
+<div class="space-y-6">
+  <div class="bg-white rounded-lg card-shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-slate-700 text-lg"> All Services</h3>
+      <a href="{{ route('admin.services.create') }}" class="inline-flex items-center px-4 py-2 bg-[#4178be] text-white rounded shadow hover:bg-[#3569a8] transition">
+        Add Service
+      </a>
     </div>
-    <div class="card-body">
-        @if($services->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Features</th>
-                            <th>Price</th>
-                            <th>Duration</th>
-                            <th>Featured</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($services as $service)
-                            <tr>
-                                <td>{{ $service->name }}</td>
-                                <td>{{ Str::limit($service->description, 80) }}</td>
-                                <td>{{ Str::limit($service->features, 80) }}</td>
-                                <td>${{ number_format($service->price, 2) }}</td>
-                                <td>{{ $service->duration ?? '-' }}</td>
-                                <td>
-                                    @if($service->is_featured)
-                                        <span class="badge bg-success">Yes</span>
-                                    @else
-                                        <span class="badge bg-secondary">No</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    {{-- <a href="{{ route('admin.services.show', $service) }}" class="btn btn-sm btn-info">
-                                        <i class="bi bi-eye"></i>
-                                    </a> --}}
-                                    <a href="{{ route('admin.services.edit', $service) }}" class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="{{ route('admin.services.destroy', $service) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this service?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="d-flex justify-content-center">
-                {{ $services->links() }}
-            </div>
-        @else
-            <div class="text-center py-5">
-                <i class="bi bi-tools text-muted" style="font-size: 4rem;"></i>
-                <h4 class="text-muted mt-3">No Services Found</h4>
-                <p class="text-muted">Start by creating your first service.</p>
-                <a href="{{ route('admin.services.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Add First Service
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b">
+            <th class="py-2 text-left text-xs font-semibold text-slate-500" style="width:80px;">Icon</th>
+            <th class="py-2 text-left text-xs font-semibold text-slate-500" style="width:140px;">Name</th>
+            <th class="py-2 text-left text-xs font-semibold text-slate-500" style="width:300px;">Description</th>
+            <th class="py-2 text-left text-xs font-semibold text-slate-500">Features</th>
+            {{-- <th class="py-2 text-left text-xs font-semibold text-slate-500">Hero Image</th> --}}
+            <th class="py-2 text-center text-xs font-semibold text-slate-500">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($services as $service)
+            <tr class=" hover:bg-slate-50 transition">
+              <td class="py-3">
+                @if($service->icon_url)
+                  <img src="{{ asset('storage/' . $service->icon_url) }}" alt="Icon" class="h-8 w-8 rounded bg-slate-100 object-contain">
+                @else
+                  <span class="text-slate-400 text-xs">No icon</span>
+                @endif
+              </td>
+              <td class="py-3 font-medium text-slate-700">{{ $service->name }}</td>
+              <td class="py-3 text-slate-500">{{ Str::limit($service->short_description, 80) ?: '-' }}</td>
+              <td class="py-3 text-slate-500">{{ Str::limit($service->features, 60) ?: '-' }}</td>
+              {{-- <td class="py-3">
+                @if($service->hero_image)
+                  <img src="{{ asset('storage/' . $service->hero_image) }}" alt="Hero" class="h-10 w-16 rounded bg-slate-100 object-cover">
+                @else
+                  <span class="text-slate-400 text-xs">No image</span>
+                @endif
+              </td> --}}
+                <td class="py-3 text-center">
+                    <a href="{{ route('admin.services.show', $service) }}" class="inline-flex items-center justify-center px-2 py-1 border rounded text-green-600 bg-white hover:bg-green-50 me-1">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ route('admin.services.edit', $service) }}" class="inline-flex items-center justify-center px-2 py-1 border rounded text-sky-600 bg-white hover:bg-sky-50 me-1">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ route('admin.services.destroy', $service) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this service?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center justify-center px-2 py-1 border rounded text-red-600 bg-white hover:bg-red-50">
+                        <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-400">
+                <i class="bi bi-tools text-3xl mb-2"></i>
+                <div>No Services Found</div>
+                <a href="{{ route('admin.services.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded shadow hover:bg-sky-700 transition">
+                  <i class="bi bi-plus-circle me-2"></i> Add First Service
                 </a>
-            </div>
-        @endif
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
     </div>
+    @if($services->hasPages())
+      <div class="mt-4 flex justify-end">
+        {{ $services->links() }}
+      </div>
+    @endif
+  </div>
 </div>
 @endsection

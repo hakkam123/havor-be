@@ -44,7 +44,7 @@ class ClientController extends Controller
 
     public function show(Clients $client)
     {
-        $client->load(['projects.service']);
+        $client->load(['projects.services']);
         return view('admin.clients.show', compact('client'));
     }
 

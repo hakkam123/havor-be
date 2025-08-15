@@ -33,7 +33,6 @@ class ProductController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
 
-        // Handle hero image upload
         if ($request->hasFile('hero_image')) {
             $imageErrors = FileUploadHelper::validateImageFile($request->file('hero_image'));
             if (!empty($imageErrors)) {
@@ -42,7 +41,6 @@ class ProductController extends Controller
             $validated['hero_image_url'] = FileUploadHelper::uploadImage($request->file('hero_image'), 'products/hero');
         }
 
-        // Handle content image upload
         if ($request->hasFile('content_image')) {
             $imageErrors = FileUploadHelper::validateImageFile($request->file('content_image'));
             if (!empty($imageErrors)) {
@@ -51,7 +49,6 @@ class ProductController extends Controller
             $validated['content_image_url'] = FileUploadHelper::uploadImage($request->file('content_image'), 'products/content');
         }
 
-        // Remove file inputs from validated data
         unset($validated['hero_image'], $validated['content_image']);
 
         Product::create($validated);

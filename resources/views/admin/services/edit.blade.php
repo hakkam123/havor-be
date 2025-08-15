@@ -1,134 +1,135 @@
 @extends('layouts.admin')
 
 @section('title', 'Edit Service - Havor Admin')
-@section('page-title', 'Edit Service: ' . $service->name)
+@section('page-title', 'Service Management')
 
 @section('page-actions')
-    <a href="{{ route('admin.services.show', $service) }}" class="btn btn-info">
-        <i class="bi bi-eye"></i> View Service
-    </a>
-    <a href="{{ route('admin.services.index') }}" class="btn btn-secondary">
+    <a href="{{ route('admin.services.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition">
         <i class="bi bi-arrow-left"></i> Back to Services
-    </a>    
+    </a>
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="bi bi-pencil"></i> Edit Service Information
-                </h6>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('admin.services.update', $service) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="form-group mb-3">
-                        <label for="name" class="form-label">Service Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                               id="name" name="name" value="{{ old('name', $service->name) }}" 
-                               placeholder="Enter service name" required>
-                        @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
+<div class="max-w-5xl mx-auto">
+  <div class="bg-white rounded-lg card-shadow p-8">
 
-                    <div class="form-group mb-3">
-                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea class="form-control @error('description') is-invalid @enderror" 
-                                  id="description" name="description" rows="3" required>{{ old('description', $service->description) }}</textarea>
-                        @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="features" class="form-label">Features</label>
-                        <textarea class="form-control @error('features') is-invalid @enderror" 
-                                  id="features" name="features" rows="3" 
-                                  placeholder="e.g., Feature 1, Feature 2, Feature 3">{{ old('features', $service->features) }}</textarea>
-                        @error('features')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Separate features with commas</div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="price" class="form-label">Price <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="number" class="form-control @error('price') is-invalid @enderror" 
-                                           id="price" name="price" value="{{ old('price', $service->price) }}" step="0.01" required>
-                                </div>
-                                @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="duration" class="form-label">Duration</label>
-                                <input type="text" class="form-control @error('duration') is-invalid @enderror" 
-                                       id="duration" name="duration" value="{{ old('duration', $service->duration) }}" 
-                                       placeholder="e.g., 2-4 weeks">
-                                @error('duration')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label for="icon" class="form-label">Service Icon</label>
-                        <input type="file" class="form-control @error('icon') is-invalid @enderror" 
-                               id="icon" name="icon" accept="image/*">
-                        @error('icon')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Upload a new icon to replace the current one (JPEG, PNG, GIF, WebP, SVG - Max: {{ env('APP_UPLOAD_MAX_SIZE', 2048) }}KB)</div>
-                        
-                        @if($service->icon_url)
-                            <div class="mt-2">
-                                <label class="form-label">Current Icon:</label><br>
-                                <img src="{{ $service->icon_url }}" alt="Current Icon" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
-                            </div>
-                        @endif
-                        
-                        <!-- New Image Preview -->
-                        <div id="icon-preview" class="mt-2" style="display: none;">
-                            <label class="form-label">New Icon Preview:</label><br>
-                            <img id="preview-image" src="" alt="Icon Preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
-                        </div>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured', $service->is_featured) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="is_featured">Feature this service</label>
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ route('admin.services.show', $service) }}" class="btn btn-secondary me-md-2">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Update Service
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="mb-8 flex items-center gap-3">
+      <h3 class="font-semibold text-xl text-slate-800">Edit Service Information</h3>
     </div>
+
+    <form action="{{ route('admin.services.update', $service) }}" method="POST" enctype="multipart/form-data">
+      @csrf
+      @method('PUT')
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-6">
+          <div>
+            <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Service Name <span class="text-red-500">*</span></label>
+            <input type="text" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-100 bg-slate-50 px-4 py-3 outline-none @error('name') border-red-400 @enderror"
+                   id="name" name="name" value="{{ old('name', $service->name) }}" 
+                   placeholder="Enter service name" required>
+            @error('name')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
+          </div>
+          <div>
+            <label for="short_description" class="block text-sm font-medium text-slate-700 mb-1">Short Description</label>
+            <textarea class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-100 bg-slate-50 px-4 py-3 outline-none @error('short_description') border-red-400 @enderror"
+                      id="short_description" name="short_description" rows="2" 
+                      placeholder="Brief description for preview">{{ old('short_description', $service->short_description) }}</textarea>
+            @error('short_description')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
+            <div class="text-xs text-slate-400 mt-1">Maximum 500 characters</div>
+          </div>
+          <div>
+            <label for="features" class="block text-sm font-medium text-slate-700 mb-1">Features</label>
+            <textarea class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-100 bg-slate-50 px-4 py-3 outline-none @error('features') border-red-400 @enderror"
+                      id="features" name="features" rows="3" 
+                      placeholder="e.g., Feature 1, Feature 2, Feature 3">{{ old('features', $service->features) }}</textarea>
+            @error('features')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
+            <div class="text-xs text-slate-400 mt-1">Separate features with commas</div>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <label for="description" class="block text-sm font-medium text-slate-700 mb-1">Description <span class="text-red-500">*</span></label>
+            <textarea class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-100 bg-slate-50 px-4 py-3 outline-none @error('description') border-red-400 @enderror"
+                      id="description" name="description" rows="5" required>{{ old('description', $service->description) }}</textarea>
+            @error('description')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
+          </div>
+          <div>
+            <label for="icon" class="block text-sm font-medium text-slate-700 mb-1">Service Icon</label>
+            <input type="file" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 @error('icon') border-red-400 @enderror"
+                   id="icon" name="icon" accept="image/*">
+            @error('icon')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
+            <div class="text-xs text-slate-400 mt-1">Upload a new icon to replace the current one (JPEG, PNG, GIF, WebP, SVG - Max: {{ env('APP_UPLOAD_MAX_SIZE', 2048) }}KB)</div>
+            @if($service->icon_url)
+              <div class="mt-2">
+                <label class="block text-xs text-slate-500 mb-1">Current Icon:</label>
+                <img src="{{ asset('storage/' . $service->icon_url) }}" alt="Current Icon" class="rounded bg-slate-100 p-2 shadow h-20 w-auto">
+              </div>
+            @endif
+            <div id="icon-preview" class="mt-2 hidden">
+              <label class="block text-xs text-slate-500 mb-1">New Icon Preview:</label>
+              <img id="preview-icon" src="" alt="Icon Preview" class="rounded bg-slate-100 p-2 shadow h-20 w-auto">
+            </div>
+          </div>
+          <div>
+            <label for="hero_image" class="block text-sm font-medium text-slate-700 mb-1">Hero Image</label>
+            <input type="file" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 @error('hero_image') border-red-400 @enderror"
+                   id="hero_image" name="hero_image" accept="image/*">
+            @error('hero_image')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
+            <div class="text-xs text-slate-400 mt-1">Upload a new hero image to replace the current one (JPEG, PNG, GIF, WebP, SVG - Max: {{ env('APP_UPLOAD_MAX_SIZE', 2048) }}KB)</div>
+            @if($service->hero_image)
+              <div class="mt-2">
+                <label class="block text-xs text-slate-500 mb-1">Current Hero Image:</label>
+                <img src="{{ asset('storage/' . $service->hero_image) }}" alt="Current Hero Image" class="rounded bg-slate-100 p-2 shadow h-28 w-auto">
+              </div>
+            @endif
+            <div id="hero-preview" class="mt-2 hidden">
+              <label class="block text-xs text-slate-500 mb-1">New Hero Image Preview:</label>
+              <img id="preview-hero" src="" alt="Hero Preview" class="rounded bg-slate-100 p-2 shadow h-28 w-auto">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-8">
+        <a href="{{ route('admin.services.show', $service) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition">
+          <i class="bi bi-x-circle"></i> Cancel
+        </a>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded shadow hover:bg-sky-700 transition">
+          <i class="bi bi-check-circle"></i> Update
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-// Image Preview functionality
 document.getElementById('icon').addEventListener('change', function(e) {
     const file = e.target.files[0];
     const preview = document.getElementById('icon-preview');
-    const previewImage = document.getElementById('preview-image');
-    
+    const previewImage = document.getElementById('preview-icon');
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             previewImage.src = e.target.result;
-            preview.style.display = 'block';
+            preview.classList.remove('hidden');
         };
         reader.readAsDataURL(file);
     } else {
-        preview.style.display = 'none';
+        preview.classList.add('hidden');
+    }
+});
+document.getElementById('hero_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('hero-preview');
+    const previewImage = document.getElementById('preview-hero');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.add('hidden');
     }
 });
 </script>

@@ -22,8 +22,9 @@ class Project extends Model
     {
         return $this->belongsTo(Clients::class, 'client_id');
     }
-    public function service()
+    
+    public function services()
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsToMany(Service::class, 'service_project');
     }
 }

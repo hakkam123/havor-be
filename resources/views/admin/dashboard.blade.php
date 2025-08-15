@@ -4,218 +4,157 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
-<div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Services</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['services'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-tools fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="space-y-6">
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between">
+      <div>
+        <div class="text-xs font-semibold text-slate-800 uppercase">Services</div>
+        <div class="text-2xl font-bold text-slate-800">{{ $stats['services'] }}</div>
+      </div>
+      <div class="text-slate-300">
+        <i class="bi bi-tools text-3xl"></i>
+      </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Projects</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['projects'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-briefcase fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between">
+      <div>
+        <div class="text-xs font-semibold text-slate-800 uppercase">Projects</div>
+        <div class="text-2xl font-bold text-slate-800">{{ $stats['projects'] }}</div>
+      </div>
+      <div class="text-slate-300"><i class="bi bi-briefcase text-3xl"></i></div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Articles</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['articles'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-newspaper fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between">
+      <div>
+        <div class="text-xs font-semibold text-slate-800 uppercase">Articles</div>
+        <div class="text-2xl font-bold text-slate-800">{{ $stats['articles'] }}</div>
+      </div>
+      <div class="text-slate-300"><i class="bi bi-newspaper text-3xl"></i></div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Leads</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['leads'] }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-envelope fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between">
+      <div>
+        <div class="text-xs font-semibold text-slate-800 uppercase">Leads</div>
+        <div class="text-2xl font-bold text-slate-800">{{ $stats['leads'] }}</div>
+      </div>
+      <div class="text-slate-300"><i class="bi bi-envelope text-3xl"></i></div>
     </div>
-</div>
+  </div>
 
-<div class="row">
-    <!-- Recent Leads -->
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="bi bi-envelope-open"></i> Recent Leads
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Date</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recent_leads as $lead)
-                                <tr>
-                                    <td>{{ $lead->name }}</td>
-                                    <td>{{ Str::limit($lead->email, 20) }}</td>
-                                    <td>{{ $lead->created_at->format('M d') }}</td>
-                                    <td>
-                                        <a href="{{ route('admin.leads.show', $lead) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">No leads found</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @if($recent_leads->count() > 0)
-                    <div class="text-center">
-                        <a href="{{ route('admin.leads.index') }}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-arrow-right"></i> View All Leads
-                        </a>
-                    </div>
-                @endif
-            </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg card-shadow">
+      <div class="px-4 py-3 border-b">
+        <h3 class="font-semibold text-slate-700"> Recent Leads</h3>
+      </div>
+      <div class="p-4">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-left text-slate-500">
+              <tr>
+                <th class="py-2">Name</th>
+                <th class="py-2">Email</th>
+                <th class="py-2">Date</th>
+                <th class="py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($recent_leads as $lead)
+                <tr>
+                  <td class="py-3">{{ $lead->name }}</td>
+                  <td class="py-3">{{ Str::limit($lead->email, 30) }}</td>
+                  <td class="py-3">{{ $lead->created_at->format('M d') }}</td>
+                  <td class="py-3">
+                    <a href="{{ route('admin.leads.show', $lead) }}" class="inline-flex items-center px-2 py-1 border rounded text-sm text-sky-600 hover:bg-sky-50">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+              @empty
+                <tr><td colspan="4" class="text-center py-6 text-slate-400">No leads found</td></tr>
+              @endforelse
+            </tbody>
+          </table>
         </div>
+        @if($recent_leads->count() > 0)
+          <div class="mt-3 text-center">
+            <a href="{{ route('admin.leads.index') }}" class="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded">View All Leads</a>
+          </div>
+        @endif
+      </div>
     </div>
 
-    <!-- Recent Articles -->
-    <div class="col-lg-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="bi bi-newspaper"></i> Recent Articles
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Industry</th>
-                                <th>Date</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recent_articles as $article)
-                                <tr>
-                                    <td>{{ Str::limit($article->title, 25) }}</td>
-                                    <td>
-                                        <span class="badge bg-secondary">{{ $article->industry->name ?? 'N/A' }}</span>
-                                    </td>
-                                    <td>{{ $article->created_at->format('M d') }}</td>
-                                    <td>
-                                        <a href="{{ route('admin.articles.show', $article) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">No articles found</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @if($recent_articles->count() > 0)
-                    <div class="text-center">
-                        <a href="{{ route('admin.articles.index') }}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-arrow-right"></i> View All Articles
-                        </a>
-                    </div>
-                @endif
-            </div>
+    <div class="bg-white rounded-lg card-shadow">
+      <div class="px-4 py-3 border-b">
+        <h3 class="font-semibold text-slate-700"> Recent Articles</h3>
+      </div>
+      <div class="p-4">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-left text-slate-500">
+              <tr>
+                <th class="py-2">Title</th>
+                <th class="py-2">Industry</th>
+                <th class="py-2">Date</th>
+                <th class="py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($recent_articles as $article)
+                <tr>
+                  <td class="py-3">{{ Str::limit($article->title, 30) }}</td>
+                  <td class="py-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">{{ $article->industry->name ?? 'N/A' }}</span></td>
+                  <td class="py-3">{{ $article->created_at->format('M d') }}</td>
+                  <td class="py-3">
+                    <a href="{{ route('admin.articles.show', $article) }}" class="inline-flex items-center px-2 py-1 border rounded text-sm text-sky-600 hover:bg-sky-50">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+              @empty
+                <tr><td colspan="4" class="text-center py-6 text-slate-400">No articles found</td></tr>
+              @endforelse
+            </tbody>
+          </table>
         </div>
-    </div>
-</div>
 
-<!-- Quick Stats -->
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="bi bi-bar-chart"></i> Quick Overview
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-2">
-                        <div class="border-right">
-                            <h5>{{ $stats['products'] }}</h5>
-                            <small class="text-muted">Products</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="border-right">
-                            <h5>{{ $stats['industries'] }}</h5>
-                            <small class="text-muted">Industries</small>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="border-right">
-                            <h5>{{ $stats['homepage_features'] }}</h5>
-                            <small class="text-muted">Features</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border-right">
-                            <h5>{{ $recent_leads->count() }}</h5>
-                            <small class="text-muted">Recent Leads</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <h5>{{ $recent_articles->count() }}</h5>
-                        <small class="text-muted">Recent Articles</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @if($recent_articles->count() > 0)
+          <div class="mt-3 text-center">
+            <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded">View All Articles</a>
+          </div>
+        @endif
+      </div>
     </div>
+  </div>
+
+  <div class="bg-white rounded-lg card-shadow p-4">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
+      <div>
+        <div class="text-2xl font-bold">{{ $stats['products'] }}</div>
+        <div class="text-xs text-slate-500">Products</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ $stats['industries'] }}</div>
+        <div class="text-xs text-slate-500">Industries</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ $stats['homepage_features'] }}</div>
+        <div class="text-xs text-slate-500">Features</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ $recent_leads->count() }}</div>
+        <div class="text-xs text-slate-500">Recent Leads</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold">{{ $recent_articles->count() }}</div>
+        <div class="text-xs text-slate-500">Recent Articles</div>
+      </div>
+      <div>
+        <div class="text-2xl font-bold">—</div>
+        <div class="text-xs text-slate-500">Placeholder</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 @endsection

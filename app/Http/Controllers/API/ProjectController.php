@@ -14,7 +14,13 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::with(['service', 'client'])->latest()->get();
+        $projects = Project::with(['services', 'client'])->latest()->get();
+        foreach ($projects as $project) {
+            $project->image_url = url('storage/' . $project->image_url);
+            if ($project->client) {
+                $project->client->icon_url = url('storage/' . $project->client->icon_url);
+            }
+        }
         return response()->json($projects);
     }
 
@@ -34,7 +40,6 @@ class ProjectController extends Controller
             'status' => 'sometimes|in:planning,in_progress,completed'
         ]);
 
-        // Set client_name from selected client
         $client = Clients::find($validated['client_id']);
         $validated['client_name'] = $client->title;
 
@@ -46,14 +51,16 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project)
+    public function show($id)
     {
-        return response()->json($project->load(['service', 'client']));
+        $project = Project::with(['services', 'client'])->findOrFail($id);
+        $project->image_url = url('storage/' . $project->image_url);
+        if ($project->client) {
+            $project->client->icon_url = url('storage/' . $project->client->icon_url);
+        }
+        return response()->json($project);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Project $project)
     {
         $validated = $request->validate([
@@ -67,7 +74,6 @@ class ProjectController extends Controller
             'status' => 'sometimes|in:planning,in_progress,completed'
         ]);
 
-        // Update client_name if client_id is changed
         if (isset($validated['client_id'])) {
             $client = Clients::find($validated['client_id']);
             $validated['client_name'] = $client->title;
@@ -77,9 +83,6 @@ class ProjectController extends Controller
         return response()->json($project->load(['service', 'client']));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Project $project)
     {
         $project->delete();

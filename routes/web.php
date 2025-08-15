@@ -68,13 +68,13 @@ Route::get('/admin/products/{product}/edit', [ProductController::class, 'edit'])
 Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
 Route::delete('/admin/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
 
-Route::get('/admin/homepage-features', [HomepageFeatureController::class, 'index'])->name('admin.homepage-features.index');
-Route::get('/admin/homepage-features/create', [HomepageFeatureController::class, 'create'])->name('admin.homepage-features.create');
-Route::post('/admin/homepage-features', [HomepageFeatureController::class, 'store'])->name('admin.homepage-features.store');
-Route::get('/admin/homepage-features/{homepage_feature}', [HomepageFeatureController::class, 'show'])->name('admin.homepage-features.show');
-Route::get('/admin/homepage-features/{homepage_feature}/edit', [HomepageFeatureController::class, 'edit'])->name('admin.homepage-features.edit');
-Route::put('/admin/homepage-features/{homepage_feature}', [HomepageFeatureController::class, 'update'])->name('admin.homepage-features.update');
-Route::delete('/admin/homepage-features/{homepage_feature}', [HomepageFeatureController::class, 'destroy'])->name('admin.homepage-features.destroy');
+Route::get('/admin/content', [HomepageFeatureController::class, 'index'])->name('admin.content.index');
+Route::get('/admin/content/create', [HomepageFeatureController::class, 'create'])->name('admin.content.create');
+Route::post('/admin/content', [HomepageFeatureController::class, 'store'])->name('admin.content.store');
+Route::get('/admin/content/{content}', [HomepageFeatureController::class, 'show'])->name('admin.content.show');
+Route::get('/admin/content/{content}/edit', [HomepageFeatureController::class, 'edit'])->name('admin.content.edit');
+Route::put('/admin/content/{content}', [HomepageFeatureController::class, 'update'])->name('admin.content.update');
+Route::delete('/admin/content/{content}', [HomepageFeatureController::class, 'destroy'])->name('admin.content.destroy');
 
 Route::get('/admin/clients', [ClientController::class, 'index'])->name('admin.clients.index');
 Route::get('/admin/clients/create', [ClientController::class, 'create'])->name('admin.clients.create');
@@ -83,3 +83,11 @@ Route::get('/admin/clients/{client}', [ClientController::class, 'show'])->name('
 Route::get('/admin/clients/{client}/edit', [ClientController::class, 'edit'])->name('admin.clients.edit');
 Route::put('/admin/clients/{client}', [ClientController::class, 'update'])->name('admin.clients.update');
 Route::delete('/admin/clients/{client}', [ClientController::class, 'destroy'])->name('admin.clients.destroy');
+
+Route::get('/admin/products', [ProductController::class, 'index'])->name('admin.products.index');
+Route::get('/admin/products/create', [ProductController::class, 'create'])->name('admin.products.create');
+Route::post('/admin/products', [ProductController::class, 'store'])->name('admin.products.store');
+Route::get('/admin/products/{product}', [ProductController::class, 'show'])->name('admin.products.show');
+Route::get('/admin/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
+Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
+Route::delete('/admin/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');

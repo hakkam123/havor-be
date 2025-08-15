@@ -77,14 +77,12 @@ class ArticleController extends Controller
             'services_id' => 'required|exists:services,id',
         ]);
 
-        // Handle image upload
         if ($request->hasFile('image')) {
             $imageErrors = FileUploadHelper::validateImageFile($request->file('image'));
             if (!empty($imageErrors)) {
                 return back()->withErrors(['image' => $imageErrors])->withInput();
             }
             
-            // Delete old image if exists
             if ($article->image_url) {
                 FileUploadHelper::deleteImage($article->image_url);
             }
@@ -92,7 +90,6 @@ class ArticleController extends Controller
             $validated['image_url'] = FileUploadHelper::uploadImage($request->file('image'), 'articles/images');
         }
 
-        // Remove file input from validated data
         unset($validated['image']);
 
         $article->update($validated);

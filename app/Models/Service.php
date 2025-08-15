@@ -9,16 +9,16 @@ class Service extends Model
     protected $fillable = [
         'name',
         'description',
+        'short_description',
+        'hero_image',
         'features',
-        'price',
-        'duration',
-        'is_featured',
         'icon_url'
     ];
 
     public function projects()
     {
         return $this->belongsToMany(Project::class, 'service_project');
+        
     }
 
     public function articles()

@@ -11,12 +11,12 @@ class HomepageFeatureController extends Controller
     public function index()
     {
         $features = HomepageFeature::paginate(10);
-        return view('admin.homepage-features.index', compact('features'));
+        return view('admin.content.index', compact('features'));
     }
 
     public function create()
     {
-        return view('admin.homepage-features.create');
+        return view('admin.content.create');
     }
 
     public function store(Request $request)
@@ -34,18 +34,18 @@ class HomepageFeatureController extends Controller
 
         HomepageFeature::create($data);
 
-        return redirect()->route('admin.homepage-features.index')
+        return redirect()->route('admin.content.index')
             ->with('success', 'Homepage feature created successfully.');
     }
 
     public function show(HomepageFeature $homepageFeature)
     {
-        return view('admin.homepage-features.show', compact('homepageFeature'));
+        return view('admin.content.show', compact('homepageFeature'));
     }
 
     public function edit(HomepageFeature $homepageFeature)
     {
-        return view('admin.homepage-features.edit', compact('homepageFeature'));
+        return view('admin.content.edit', compact('homepageFeature'));
     }
 
     public function update(Request $request, HomepageFeature $homepageFeature)
@@ -63,7 +63,7 @@ class HomepageFeatureController extends Controller
 
         $homepageFeature->update($data);
 
-        return redirect()->route('admin.homepage-features.index')
+        return redirect()->route('admin.content.index')
             ->with('success', 'Homepage feature updated successfully.');
     }
 

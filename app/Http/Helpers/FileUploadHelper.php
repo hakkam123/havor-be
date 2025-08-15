@@ -16,16 +16,21 @@ class FileUploadHelper
         
         $path = $file->storeAs($directory, $filename, 'public');
         
-        return env('APP_URL') . '/storage/' . $path;
+        // Return only relative path, not full URL
+        return $path;
     }
 
-    public static function deleteImage(string $url): bool
+    public static function deleteImage(string $path): bool
     {
-        if (empty($url)) {
+        if (empty($path)) {
             return true;
         }
 
-        $path = str_replace(env('APP_URL') . '/storage/', '', $url);
+        // If path already contains full URL, extract relative path
+        if (str_contains($path, '/storage/')) {
+            $path = str_replace(env('APP_URL') . '/storage/', '', $path);
+            $path = str_replace('/storage/', '', $path);
+        }
         
         if (Storage::disk('public')->exists($path)) {
             return Storage::disk('public')->delete($path);
