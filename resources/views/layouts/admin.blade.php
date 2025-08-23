@@ -7,6 +7,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/havor-kecil.jpg') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>

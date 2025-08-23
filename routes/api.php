@@ -39,3 +39,4 @@ Route::apiResource('services/public', ServiceController::class);
 
 Route::get('services/public/{id}/articles', [ServiceController::class, 'articles']);
 Route::get('services/public/{id}/projects', [ServiceController::class, 'projects']);
+Route::get('industries/public/{id}/articles', [IndustryController::class, 'articles']);

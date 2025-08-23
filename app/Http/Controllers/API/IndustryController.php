@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Industry;
+use App\Models\Article;
 use Illuminate\Http\Request;
 
 class IndustryController extends Controller
@@ -64,5 +65,27 @@ class IndustryController extends Controller
 
         $industry->delete();
         return response()->json(['message' => 'Industry deleted successfully']);
+    }
+
+    /**
+     * Get related articles by industry ID
+     */
+    public function articles($id)
+    {
+        $industry = Industry::findOrFail($id);
+        
+        $articles = Article::with(['industry', 'service'])
+            ->where('industry_id', $id)
+            ->latest()
+            ->paginate(10);
+
+        foreach ($articles as $article) {
+            $article->image_url = url('storage/' . $article->image_url);
+        }
+
+        return response()->json([
+            'industry' => $industry,
+            'articles' => $articles
+        ]);
     }
 }

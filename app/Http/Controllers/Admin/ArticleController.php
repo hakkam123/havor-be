@@ -100,7 +100,6 @@ class ArticleController extends Controller
 
     public function destroy(Article $article)
     {
-        // Delete associated image file
         if ($article->image_url) {
             FileUploadHelper::deleteImage($article->image_url);
         }
