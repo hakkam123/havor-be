@@ -6,7 +6,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'https://hakkam-dummy.vercel.app'],
+    'allowed_origins' => ['http://localhost:3000', 'https://hakkam-dummy.vercel.app', 'http://localhost:8000'],
 
     'allowed_headers' => ['*'],
 

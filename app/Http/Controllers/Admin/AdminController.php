@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\Service;
 use App\Models\Project;
 use App\Models\Article;
@@ -48,22 +50,76 @@ class AdminController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
-        }
+        try {
+            // Attempt to authenticate with JWT
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return back()->withErrors([
+                    'email' => 'The provided credentials do not match our records.',
+                ])->withInput($request->only('email'));
+            }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->withInput($request->only('email'));
+
+            $user = JWTAuth::user();
+            
+            // Determine TTL based on Remember Me
+            $remember = $request->has('remember');
+            $ttl = $remember ? 43200 : 120; // 30 days vs 2 hours
+
+            // Store in session
+            session(['admin_token' => $token]);
+            session(['admin_user_id' => $user->id]);
+            session(['login_time' => now()]);
+            
+            // Store in cookie (always for middleware to read)
+            $cookie = cookie('admin_token', $token, $ttl, null, null, false, true);
+            
+            // Regenerate session ID for security (but keep the data)
+            $sessionData = session()->all();
+            $request->session()->regenerate();
+            
+            foreach ($sessionData as $key => $value) {
+                session([$key => $value]);
+            }
+
+            return redirect()->intended(route('admin.dashboard'))
+                ->with('success', 'Welcome back!')
+                ->cookie($cookie);
+
+        } catch (\Exception $e) {
+            Log::error('Admin login error', [
+                'error' => $e->getMessage(),
+                'email' => $request->email
+            ]);
+            
+            return back()->withErrors([
+                'email' => 'Login failed. Please try again.',
+            ])->withInput($request->only('email'));
+        }
     }
 
     public function logout(Request $request)
     {
+        try {
+
+            $token = session('admin_token') ?? $request->cookie('admin_token');
+            if ($token) {
+                JWTAuth::setToken($token)->invalidate();
+                Log::info('Admin JWT token invalidated successfully');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Admin logout token invalidation failed', ['error' => $e->getMessage()]);
+        }
+
+
+        session()->forget('admin_token');
+        cookie()->queue(cookie()->forget('admin_token'));
+        
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
-        return redirect()->route('admin.login');
+        Log::info('Admin logged out successfully');
+        return redirect()->route('admin.login')->with('success', 'Logged out successfully');
     }
 }
