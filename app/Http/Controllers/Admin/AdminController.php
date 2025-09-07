@@ -51,29 +51,23 @@ class AdminController extends Controller
         ]);
 
         try {
-            // Attempt to authenticate with JWT
             if (!$token = JWTAuth::attempt($credentials)) {
                 return back()->withErrors([
                     'email' => 'The provided credentials do not match our records.',
                 ])->withInput($request->only('email'));
             }
 
-
             $user = JWTAuth::user();
             
-            // Determine TTL based on Remember Me
             $remember = $request->has('remember');
             $ttl = $remember ? 43200 : 120; // 30 days vs 2 hours
 
-            // Store in session
             session(['admin_token' => $token]);
             session(['admin_user_id' => $user->id]);
             session(['login_time' => now()]);
             
-            // Store in cookie (always for middleware to read)
             $cookie = cookie('admin_token', $token, $ttl, null, null, false, true);
             
-            // Regenerate session ID for security (but keep the data)
             $sessionData = session()->all();
             $request->session()->regenerate();
             
