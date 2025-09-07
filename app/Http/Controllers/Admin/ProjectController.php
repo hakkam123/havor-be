@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\Clients;
 use App\Http\Helpers\FileUploadHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
@@ -22,40 +23,51 @@ class ProjectController extends Controller
         $services = Service::all();
         $clients = Clients::all();
         return view('admin.projects.create', compact('services', 'clients'));
-    }
-
+        }
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'content' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,gif,webp,svg|max:' . env('APP_UPLOAD_MAX_SIZE', 2048),
-            'client_id' => 'required|exists:clients,id',
-            'service_id' => 'required|exists:services,id',
-            'project_date' => 'required|date',
-            'status' => 'required|in:planning,in_progress,completed',
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'content' => 'required|string',
+                'image' => 'required|image|mimes:jpeg,png,gif,webp,svg|max:' . env('APP_UPLOAD_MAX_SIZE', 2048),
+                'client_id' => 'required|exists:clients,id',
+                'service_id' => 'required|exists:services,id',
+                'project_date' => 'required|date',
+                'status' => 'required|in:planning,in_progress,completed',
+            ]);
 
-        if ($request->hasFile('image')) {
-            $imageErrors = FileUploadHelper::validateImageFile($request->file('image'));
-            if (!empty($imageErrors)) {
-                return back()->withErrors(['image' => $imageErrors])->withInput();
+            if ($request->hasFile('image')) {
+                $imageErrors = FileUploadHelper::validateImageFile($request->file('image'));
+                if (!empty($imageErrors)) {
+                    return back()->withErrors(['image' => $imageErrors])->withInput();
+                }
+
+                $validated['image_url'] = FileUploadHelper::uploadImage($request->file('image'), 'projects/images');
             }
-            $validated['image_url'] = FileUploadHelper::uploadImage($request->file('image'), 'projects/images');
+
+            $client = Clients::find($request->client_id);
+            if ($client) {
+                $validated['client_name'] = $client->title;
+            }
+
+            $project = Project::create($validated);
+
+            if ($validated['service_id']) {
+                $project->services()->attach($validated['service_id']);
+            }
+
+            return redirect()->route('admin.projects.index')
+                ->with('success', 'Project created successfully.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to create project: ' . $e->getMessage())
+                ->withInput();
         }
-
-        $client = Clients::find($request->client_id);
-        $validated['client_name'] = $client->title;
-
-        $project = Project::create($validated);
-
-        if ($validated['service_id']) {
-            $project->services()->attach($validated['service_id']);
-        }
-
-        return redirect()->route('admin.projects.index')
-            ->with('success', 'Project created successfully.');
     }
 
     public function show(Project $project)

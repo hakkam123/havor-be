@@ -163,9 +163,6 @@
           <i class="bi bi-folder-x text-slate-300 text-4xl mb-2"></i>
           <h5 class="text-slate-400 mb-1">No Projects Yet</h5>
           <p class="text-slate-400 mb-3">This client doesn't have any projects associated yet.</p>
-          <a href="{{ route('admin.projects.create') }}?client_id={{ $client->id }}" class="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded shadow hover:bg-sky-700 transition">
-            <i class="bi bi-plus me-2"></i> Create First Project
-          </a>
         </div>
       @endif
     </div>
