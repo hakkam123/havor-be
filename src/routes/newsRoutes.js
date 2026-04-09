@@ -14,8 +14,8 @@ router.get('/', getAllNews);
 router.get('/:slug', getNewsBySlug);
 
 // Protected routes
-router.post('/', protect, upload.single('image'), createNews);
-router.put('/:id', protect, upload.single('image'), updateNews);
+router.post('/', protect, upload.single('image_url'), createNews);
+router.put('/:id', protect, upload.single('image_url'), updateNews);
 router.delete('/:id', protect, deleteNews);
 
 module.exports = router;

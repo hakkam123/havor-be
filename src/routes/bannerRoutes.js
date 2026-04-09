@@ -13,7 +13,7 @@ router.get('/', getAllBanners);
 router.get('/:page', getBannerByPage);
 
 // Protected routes
-router.post('/', protect, upload.single('media'), upsertBanner);
+router.post('/', protect, upload.single('media_url'), upsertBanner);
 router.delete('/:id', protect, deleteBanner);
 
 module.exports = router;
