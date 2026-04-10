@@ -76,7 +76,7 @@
                                     <td class="py-3">{{ $project->created_at->format('M d, Y') }}</td>
                                     <td class="py-3 text-center">
                                         <a href="{{ route('admin.projects.show', $project) }}" class="inline-flex items-center px-2 py-1 border rounded text-sky-600 bg-white hover:bg-sky-50">
-                                            <i class="bi bi-eye"></i> View
+                                             View
                                         </a>
                                     </td>
                                 </tr>
@@ -89,7 +89,7 @@
                     <h5 class="text-slate-400 mt-2 mb-1">No Related Projects</h5>
                     <p class="text-slate-400 mb-4">This service is not linked to any projects yet.</p>
                     <a href="{{ route('admin.projects.create') }}" class="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded shadow hover:bg-sky-700 transition">
-                        <i class="bi bi-plus-circle me-2"></i> Create
+                         Create
                     </a>
                 </div>
             @endif
@@ -103,10 +103,10 @@
             </div>
             <div class="flex flex-col gap-3">
                 <a href="{{ route('admin.services.edit', $service) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 text-white rounded shadow hover:bg-yellow-500 transition">
-                    <i class="bi bi-pencil"></i> Edit Service
+                    Edit Service
                 </a>
                 <a href="{{ route('admin.services.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition">
-                    <i class="bi bi-list"></i> All Services
+                    All Services
                 </a>
             </div>
         </div>

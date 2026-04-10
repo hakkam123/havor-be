@@ -91,10 +91,10 @@
       </div>
       <div class="flex items-center justify-end gap-2 pt-8">
         <a href="{{ route('admin.services.show', $service) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition">
-          <i class="bi bi-x-circle"></i> Cancel
+           Cancel
         </a>
         <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded shadow hover:bg-sky-700 transition">
-          <i class="bi bi-check-circle"></i> Update
+          Update
         </button>
       </div>
     </form>

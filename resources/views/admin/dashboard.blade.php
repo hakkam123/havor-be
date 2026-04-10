@@ -13,7 +13,6 @@
         <div class="text-2xl font-bold text-slate-800">{{ $stats['services'] }}</div>
       </div>
       <div class="text-slate-300">
-        <i class="bi bi-tools text-3xl"></i>
       </div>
     </div>
 
@@ -22,7 +21,6 @@
         <div class="text-xs font-semibold text-slate-800 uppercase">Projects</div>
         <div class="text-2xl font-bold text-slate-800">{{ $stats['projects'] }}</div>
       </div>
-      <div class="text-slate-300"><i class="bi bi-briefcase text-3xl"></i></div>
     </div>
 
     <div class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between">
@@ -30,7 +28,6 @@
         <div class="text-xs font-semibold text-slate-800 uppercase">Articles</div>
         <div class="text-2xl font-bold text-slate-800">{{ $stats['articles'] }}</div>
       </div>
-      <div class="text-slate-300"><i class="bi bi-newspaper text-3xl"></i></div>
     </div>
 
     <div class="bg-white rounded-lg p-4 card-shadow flex items-center justify-between">
@@ -38,7 +35,6 @@
         <div class="text-xs font-semibold text-slate-800 uppercase">Leads</div>
         <div class="text-2xl font-bold text-slate-800">{{ $stats['leads'] }}</div>
       </div>
-      <div class="text-slate-300"><i class="bi bi-envelope text-3xl"></i></div>
     </div>
   </div>
 
@@ -120,14 +116,14 @@
 
         @if($recent_articles->count() > 0)
           <div class="mt-3 text-center">
-            <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded">View All Articles</a>
+            <a href="{{ route('admin.articles.index') }}" class="inline-flex items-center px-4 py-2 text-sm bg-sky-600 text-white rounded">View All Articles</a>
           </div>
         @endif
       </div>
     </div>
   </div>
 
-  <div class="bg-white rounded-lg card-shadow p-4">
+  {{-- <div class="bg-white rounded-lg card-shadow p-4">
     <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
       <div>
         <div class="text-2xl font-bold">{{ $stats['products'] }}</div>
@@ -154,7 +150,7 @@
         <div class="text-xs text-slate-500">Placeholder</div>
       </div>
     </div>
-  </div>
+  </div> --}}
 
 </div>
 @endsection

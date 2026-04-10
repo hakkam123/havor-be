@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Industry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Http\Helpers\FileUploadHelper;
 
 class IndustryController extends Controller
 {
-    public function index()
+        public function index()
     {
         $industries = Industry::withCount(['articles'])->paginate(10);
         return view('admin.industries.index', compact('industries'));
@@ -21,16 +24,42 @@ class IndustryController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'icon' => 'nullable|image|mimes:jpeg,png,gif,webp,svg|max:2048',
+            ]);
 
-        Industry::create($request->all());
+            // Handle file upload dan map ke database field
+            if ($request->hasFile('icon')) {
+                $iconErrors = FileUploadHelper::validateImageFile($request->file('icon'));
+                if (!empty($iconErrors)) {
+                    return back()->withErrors(['icon' => $iconErrors])->withInput();
+                }
 
-        return redirect()->route('admin.industries.index')
-            ->with('success', 'Industry created successfully.');
+                // Upload file dan get path
+                $iconPath = FileUploadHelper::uploadImage($request->file('icon'), 'industries/icons');
+                
+                // Replace file object dengan path string untuk database
+                $validated['icon'] = $iconPath;
+            } else {
+                // Remove icon field jika tidak ada file
+                unset($validated['icon']);
+            }
+
+            $industry = Industry::create($validated);
+
+            return redirect()->route('admin.industries.index')
+                ->with('success', 'Industry created successfully.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to create industry: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function show(Industry $industry)
@@ -46,13 +75,26 @@ class IndustryController extends Controller
 
     public function update(Request $request, Industry $industry)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'icon' => 'nullable|image|mimes:jpeg,png,gif,webp,svg|max:2048', 
         ]);
 
-        $industry->update($request->all());
+        if ($request->hasFile('icon')) {
+            $iconErrors = FileUploadHelper::validateImageFile($request->file('icon'));
+            if (!empty($iconErrors)) {
+                return back()->withErrors(['icon' => $iconErrors])->withInput();
+            }
+
+            if ($industry->icon) {
+                FileUploadHelper::deleteImage($industry->icon);
+            }
+
+            $validated['icon'] = FileUploadHelper::uploadImage($request->file('icon'), 'industries/icons');
+        }
+
+        $industry->update($validated);
 
         return redirect()->route('admin.industries.index')
             ->with('success', 'Industry updated successfully.');
@@ -63,6 +105,10 @@ class IndustryController extends Controller
         if ($industry->articles()->count() > 0) {
             return redirect()->route('admin.industries.index')
                 ->with('error', 'Cannot delete industry that has articles.');
+        }
+
+        if ($industry->icon) {
+            FileUploadHelper::deleteImage($industry->icon);
         }
 
         $industry->delete();
