@@ -17,7 +17,7 @@ const seedAdmin = async () => {
         email: 'admin@havor.com',
         password: 'admin123admin' // In real life, should be changed immediately
       });
-      console.log('✅ Default Admin created:');
+      console.log('Default Admin created:');
       console.log('Username: admin');
       console.log('Password: admin123admin');
     }

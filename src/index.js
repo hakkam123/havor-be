@@ -14,6 +14,8 @@ const newsRoutes = require('./routes/newsRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
 const expertiseRoutes = require('./routes/expertiseRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const clientRoutes = require('./routes/clientRoutes');
+const careerRoutes = require('./routes/careerRoutes');
 const productRoutes = require('./routes/productRoutes');
 const workRoutes = require('./routes/workRoutes');
 const contactRoutes = require('./routes/contactRoutes');
@@ -23,6 +25,11 @@ const app = express();
 
 // Connect Database
 connectDB();
+
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://admin.havor.com'], 
+  credentials: true
+}))
 
 // Middlewares
 app.use(helmet({
@@ -42,6 +49,8 @@ app.use('/api/news', newsRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/expertise', expertiseRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/clients', clientRoutes);
+app.use('/api/careers', careerRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/works', workRoutes);
 app.use('/api/contact', contactRoutes);

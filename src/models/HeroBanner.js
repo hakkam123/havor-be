@@ -10,7 +10,7 @@ const HeroBanner = sequelize.define('HeroBanner', {
   page_name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true, // Typically one hero per page
+    unique: true, 
   },
   title: {
     type: DataTypes.STRING,

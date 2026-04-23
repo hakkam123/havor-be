@@ -55,6 +55,26 @@ CREATE TABLE `expertises` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `clients` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `client_icon` varchar(255) DEFAULT NULL,
+  `description` text NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `careers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `thumbnail` varchar(255) DEFAULT NULL,
+  `job_title` varchar(255) NOT NULL,
+  `job_description` text NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -89,6 +109,16 @@ CREATE TABLE `contact_messages` (
   `subject` varchar(255) DEFAULT NULL,
   `message` text NOT NULL,
   `is_read` tinyint(1) DEFAULT 0,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `careers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `thumbnail` varchar(255) DEFAULT NULL,
+  `job_title` varchar(255) NOT NULL,
+  `job_description` text NOT NULL,
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
   PRIMARY KEY (`id`)

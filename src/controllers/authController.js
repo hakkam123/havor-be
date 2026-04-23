@@ -5,10 +5,10 @@ const Admin = require('../models/Admin');
 // @route   POST /api/auth/login
 // @access  Public
 const login = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    const admin = await Admin.findOne({ where: { username } });
+    const admin = await Admin.findOne({ where: { email } });
 
     if (admin && (await admin.comparePassword(password))) {
       res.json({
@@ -19,7 +19,7 @@ const login = async (req, res) => {
         refreshToken: generateRefreshToken(admin.id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid username or password' });
+      res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

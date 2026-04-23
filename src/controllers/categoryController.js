@@ -40,15 +40,16 @@ const createCategory = async (req, res) => {
 // @access  Private/Admin
 const updateCategory = async (req, res) => {
   const { name } = req.body;
+  const { id } = req.params;
   try {
     await sequelize.query(
       'UPDATE categories SET name = ?, updatedAt = NOW() WHERE id = ?',
       {
-        replacements: [name, req.params.id],
+        replacements: [name, id],
         type: QueryTypes.UPDATE
       }
     );
-    res.json({ id: req.params.id, name });
+    res.json({ message : 'Category updated successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

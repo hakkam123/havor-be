@@ -10,6 +10,8 @@ const storage = multer.diskStorage({
     // Determine folder based on fieldname or route if needed
     if (req.baseUrl.includes('news')) folder += 'news/';
     else if (req.baseUrl.includes('banners')) folder += 'banners/';
+    else if (req.baseUrl.includes('careers')) folder += 'careers/';
+    else if (req.baseUrl.includes('clients')) folder += 'clients/';
     else if (req.baseUrl.includes('expertise')) folder += 'expertise/';
     else if (req.baseUrl.includes('products')) folder += 'products/';
     else if (req.baseUrl.includes('works')) folder += 'works/';
