@@ -12,6 +12,24 @@ CREATE TABLE `admins` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `admin_sessions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `adminId` int(11) NOT NULL,
+  `tokenHash` varchar(64) NOT NULL UNIQUE,
+  `expiresAt` datetime NOT NULL,
+  `revokedAt` datetime DEFAULT NULL,
+  `lastUsedAt` datetime DEFAULT NULL,
+  `ipAddress` varchar(255) DEFAULT NULL,
+  `userAgent` varchar(255) DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `admin_sessions_admin_id_idx` (`adminId`),
+  KEY `admin_sessions_expires_at_idx` (`expiresAt`),
+  KEY `admin_sessions_revoked_at_idx` (`revokedAt`),
+  CONSTRAINT `admin_sessions_admin_fk` FOREIGN KEY (`adminId`) REFERENCES `admins` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL UNIQUE,

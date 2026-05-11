@@ -2,6 +2,7 @@ const { sequelize, connectDB } = require('./config/database');
 const News = require('./models/News');
 const HeroBanner = require('./models/HeroBanner');
 const Expertise = require('./models/Expertise');
+const Category = require('./models/Category');
 const Product = require('./models/Product');
 const Work = require('./models/Work');
 const ContactMessage = require('./models/ContactMessage');
@@ -77,18 +78,29 @@ const buildExpertiseSeeds = (expertiseIcons) => [
   }
 ];
 
-const buildProductSeeds = (productImages) => [
+const buildCategorySeeds = () => [
+  {
+    name: 'Cara "Sehat"'
+  },
+  {
+    name: 'Software'
+  }
+];
+
+const buildProductSeeds = (productImages, categories = []) => [
   {
     name: 'Havor ERP v1.0',
     description: 'Enterprise resource planning for international trade.',
     image_url: productImages[0] || null,
-    external_link: 'https://havor.com/erp'
+    external_link: 'https://havor.com/erp',
+    categoryId: categories[0]?.id || null
   },
   {
     name: 'SecureGate VPN',
     description: 'High-security networking for global teams.',
     image_url: productImages[1] || productImages[0] || null,
-    external_link: 'https://havor.com/securegate'
+    external_link: 'https://havor.com/securegate',
+    categoryId: categories[1]?.id || categories[0]?.id || null
   }
 ];
 
@@ -166,23 +178,29 @@ const seedDummyData = async () => {
     await Expertise.bulkCreate(buildExpertiseSeeds(expertiseIcons));
     console.log('✅ Expertise Seeded');
 
-    // 4. Products
-    await Product.bulkCreate(buildProductSeeds(productImages));
+    // 4. Categories
+    const categories = await Category.bulkCreate(buildCategorySeeds(), {
+      returning: true
+    });
+    console.log('✅ Categories Seeded');
+
+    // 5. Products
+    await Product.bulkCreate(buildProductSeeds(productImages, categories));
     console.log('✅ Products Seeded');
 
-    // 5. Works
+    // 6. Works
     await Work.bulkCreate(buildWorkSeeds(workImages));
     console.log('✅ Works Seeded');
 
-    // 6. Clients
+    // 7. Clients
     await Client.bulkCreate(buildClientSeeds(clientIcons));
     console.log('✅ Clients Seeded');
 
-    // 7. Careers
+    // 8. Careers
     await Career.bulkCreate(buildCareerSeeds(careerThumbs));
     console.log('✅ Careers Seeded');
 
-    // 8. Contact Messages
+    // 9. Contact Messages
     await ContactMessage.bulkCreate([
       {
         name: 'John Doe',
