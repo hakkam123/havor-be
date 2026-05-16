@@ -17,7 +17,7 @@ const getAllWorks = async (req, res) => {
     );
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -38,7 +38,7 @@ const createWork = async (req, res) => {
     );
     res.status(201).json({ id: result, title, description, client, year, image_url, categoryId });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -93,7 +93,7 @@ const updateWork = async (req, res) => {
       res.status(404).json({ message: 'Work entry not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -122,7 +122,7 @@ const deleteWork = async (req, res) => {
       res.status(404).json({ message: 'Work entry not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

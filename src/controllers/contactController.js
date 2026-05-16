@@ -17,7 +17,7 @@ const submitMessage = async (req, res) => {
     );
     res.status(201).json({ id: result, name, email, subject, message });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -32,7 +32,7 @@ const getMessages = async (req, res) => {
     );
     res.json(messages);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -47,7 +47,7 @@ const markAsRead = async (req, res) => {
     );
     res.json({ message: 'Message marked as read' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -62,7 +62,7 @@ const deleteMessage = async (req, res) => {
     );
     res.json({ message: 'Message removed' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

@@ -14,7 +14,7 @@ const getAllExpertises = async (req, res) => {
     );
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -35,7 +35,7 @@ const createExpertise = async (req, res) => {
     );
     res.status(201).json({ id: result, name, description, icon_url });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -84,7 +84,7 @@ const updateExpertise = async (req, res) => {
       res.status(404).json({ message: 'Expertise not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -113,7 +113,7 @@ const deleteExpertise = async (req, res) => {
       res.status(404).json({ message: 'Expertise not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

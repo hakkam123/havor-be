@@ -24,6 +24,13 @@ const Admin = sequelize.define('Admin', {
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      isStrongEnough(value) {
+        if (this.changed('password') && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,}$/.test(value)) {
+          throw new Error('Password must be at least 12 characters and include uppercase, lowercase, number, and symbol');
+        }
+      },
+    },
   },
 }, {
   tableName: 'admins',

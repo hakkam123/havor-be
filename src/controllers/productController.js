@@ -17,7 +17,7 @@ const getAllProducts = async (req, res) => {
     );
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -38,7 +38,7 @@ const createProduct = async (req, res) => {
     );
     res.status(201).json({ id: result, name, description, image_url, external_link, categoryId });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -91,7 +91,7 @@ const updateProduct = async (req, res) => {
       res.status(404).json({ message: 'Product not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -120,7 +120,7 @@ const deleteProduct = async (req, res) => {
       res.status(404).json({ message: 'Product not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

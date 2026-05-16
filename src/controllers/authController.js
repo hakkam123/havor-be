@@ -63,7 +63,7 @@ const login = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -150,7 +150,7 @@ const logout = async (req, res) => {
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

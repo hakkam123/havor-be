@@ -14,7 +14,7 @@ const getAllBanners = async (req, res) => {
     );
     res.json(banners);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -33,7 +33,7 @@ const getBannerByPage = async (req, res) => {
       res.status(404).json({ message: 'Banner not found for this page' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -97,7 +97,7 @@ const upsertBanner = async (req, res) => {
       res.status(201).json({ id: result, page_name, title, subtitle, media_url, media_type: type });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -126,7 +126,7 @@ const deleteBanner = async (req, res) => {
       res.status(404).json({ message: 'Banner not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

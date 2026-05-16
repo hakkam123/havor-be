@@ -132,14 +132,4 @@ CREATE TABLE `contact_messages` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE `careers` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `thumbnail` varchar(255) DEFAULT NULL,
-  `job_title` varchar(255) NOT NULL,
-  `job_description` text NOT NULL,
-  `createdAt` datetime NOT NULL,
-  `updatedAt` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 COMMIT;

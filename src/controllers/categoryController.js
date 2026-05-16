@@ -12,7 +12,7 @@ const getAllCategories = async (req, res) => {
     );
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -31,7 +31,7 @@ const createCategory = async (req, res) => {
     );
     res.status(201).json({ id: result[0], name });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -51,7 +51,7 @@ const updateCategory = async (req, res) => {
     );
     res.json({ message : 'Category updated successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -69,7 +69,7 @@ const deleteCategory = async (req, res) => {
     );
     res.json({ message: 'Category removed' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

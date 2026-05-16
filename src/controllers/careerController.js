@@ -35,7 +35,7 @@ const createCareer = async (req, res) => {
         );
         res.status(201).json({ id: result[0], thumbnail, job_title, job_description });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -72,7 +72,7 @@ const updateCareer = async (req, res) => {
         );
         res.json({ message: 'Career updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -102,7 +102,7 @@ const deleteCareer = async (req, res) => {
         );
         res.json({ message: 'Career removed' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

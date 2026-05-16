@@ -7,6 +7,7 @@ const seedAdmin = async () => {
     await connectDB();
     await sequelize.sync();
 
+    const defaultPassword = process.env.ADMIN_PASSWORD || 'HavorAdmin@2026';
     const adminExists = await Admin.findOne({ where: { username: 'admin' } });
 
     if (adminExists) {
@@ -15,16 +16,16 @@ const seedAdmin = async () => {
       await Admin.create({
         username: 'admin',
         email: 'admin@havor.com',
-        password: 'admin123admin' // In real life, should be changed immediately
+        password: defaultPassword,
       });
       console.log('Default Admin created:');
       console.log('Username: admin');
-      console.log('Password: admin123admin');
+      console.log('Password: use ADMIN_PASSWORD from .env or rotate it immediately after first login');
     }
 
     process.exit();
   } catch (error) {
-    console.error('❌ Error seeding admin:', error.message);
+    console.error('Error seeding admin:', error.message);
     process.exit(1);
   }
 };

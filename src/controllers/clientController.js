@@ -11,7 +11,7 @@ const getAllClients = async (req, res) => {
         );
         res.json(clients);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -28,7 +28,7 @@ const createClient = async (req, res) => {
         );
         res.status(201).json({ id: result[0], name, client_icon, description });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -62,7 +62,7 @@ const updateClient = async (req, res) => {
         );
         res.json({ message: 'Client updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -89,7 +89,7 @@ const deleteClient = async (req, res) => {
         );
         res.json({ message: 'Client removed' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 

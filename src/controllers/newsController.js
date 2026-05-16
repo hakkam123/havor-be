@@ -15,7 +15,7 @@ const getAllNews = async (req, res) => {
     );
     res.json(news);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -34,7 +34,7 @@ const getNewsBySlug = async (req, res) => {
       res.status(404).json({ message: 'News not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -58,7 +58,7 @@ const createNews = async (req, res) => {
     );
     res.status(201).json({ id: result, title, slug, content, category, is_published: !!published, image_url });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -122,7 +122,7 @@ const updateNews = async (req, res) => {
       res.status(404).json({ message: 'News not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -151,7 +151,7 @@ const deleteNews = async (req, res) => {
       res.status(404).json({ message: 'News not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

@@ -1,0 +1,6 @@
+.env
+node_modules/
+uploads/
+projects.zip
+npm-debug.log*
+*.log
