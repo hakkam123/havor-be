@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { cleanupUploadedFile, toValidationErrors, validationError } = require('../utils/apiResponse');
 
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
@@ -9,10 +10,8 @@ const validate = (schema, property = 'body') => {
     });
 
     if (error) {
-      return res.status(400).json({
-        message: 'Invalid request data',
-        errors: error.details.map((detail) => detail.message),
-      });
+      cleanupUploadedFile(req);
+      return validationError(res, toValidationErrors(error.details));
     }
 
     req[property] = value;
@@ -41,7 +40,10 @@ const createRateLimiter = ({ windowMs, max, message }) => {
 
     if (current.count > max) {
       res.set('Retry-After', Math.ceil((current.resetAt - now) / 1000));
-      return res.status(429).json({ message });
+      return res.status(429).json({
+        success: false,
+        message,
+      });
     }
 
     next();

@@ -1,7 +1,37 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
+const CareerApplication = require('../models/CareerApplication');
+const { sendCareerEmails } = require('../services/emailService');
+const { getSignedObjectUrl, uploadBuffer } = require('../services/storageService');
+const {
+    cleanupUploadedFile,
+    conflictError,
+    notFound,
+    removeFile,
+    serverError,
+    validationError,
+} = require('../utils/apiResponse');
+
+const ensureUniqueTitle = async (jobTitle, ignoreId = null) => {
+    const replacements = ignoreId ? [jobTitle, ignoreId] : [jobTitle];
+    const condition = ignoreId ? 'LOWER(job_title) = LOWER(?) AND id != ?' : 'LOWER(job_title) = LOWER(?)';
+    const existing = await sequelize.query(
+        `SELECT id FROM careers WHERE ${condition} LIMIT 1`,
+        { replacements, type: QueryTypes.SELECT }
+    );
+    return existing.length === 0;
+};
+
+const isStorageProviderError = (error) => {
+    const storageErrorCodes = new Set([
+        'AccessDenied',
+        'InvalidAccessKeyId',
+        'NoSuchBucket',
+        'SignatureDoesNotMatch',
+    ]);
+
+    return storageErrorCodes.has(error.Code || error.code) || error.$metadata?.httpStatusCode >= 400;
+};
 
 // @desc    Get all careers
 // @route   GET /api/careers
@@ -14,7 +44,125 @@ const getAllCareers = async (req, res) => {
         );
         res.json(careers);
     } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        serverError(res, error);
+    }
+};
+
+// @desc    Submit public career application
+// @route   POST /api/careers
+// @access  Public
+const submitCareerApplication = async (req, res) => {
+    const {
+        fullName,
+        email,
+        phone,
+        address,
+        position,
+        latestEducation,
+        experienceSummary,
+        portfolioUrl,
+        coverLetter,
+    } = req.body;
+    const message = req.body.message || coverLetter;
+
+    if (!req.file) {
+        return res.status(422).json({
+            success: false,
+            message: 'CV wajib diupload.',
+        });
+    }
+
+    let storedResume;
+
+    try {
+        storedResume = await uploadBuffer({
+            buffer: req.file.buffer,
+            originalName: req.file.originalname,
+            mimeType: req.file.mimetype,
+            size: req.file.size,
+            folder: 'careers',
+            metadata: {
+                applicantEmail: email,
+                position,
+            },
+        });
+
+        const application = await CareerApplication.create({
+            full_name: fullName,
+            email,
+            phone,
+            address: address || null,
+            position,
+            latest_education: latestEducation || null,
+            experience_summary: experienceSummary || null,
+            portfolio_url: portfolioUrl || null,
+            message,
+            cv_original_name: storedResume.originalName,
+            cv_mime_type: storedResume.mimeType,
+            cv_size: storedResume.size,
+            cv_storage_key: storedResume.key,
+            cv_bucket: storedResume.bucket,
+            cv_url: storedResume.publicUrl,
+            cv_signed_url_strategy: storedResume.signedUrlStrategy,
+            status: 'new',
+        });
+
+        let resumeReference = storedResume.key;
+        try {
+            resumeReference = await getSignedObjectUrl(storedResume.key);
+        } catch (signedUrlError) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.error('Failed to create resume signed URL:', signedUrlError.message);
+            }
+        }
+
+        const emailStatus = await sendCareerEmails({
+            application: {
+                fullName,
+                email,
+                phone,
+                address,
+                position,
+                latestEducation,
+                experienceSummary,
+                portfolioUrl,
+                message,
+            },
+            resumeReference,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Lamaran berhasil dikirim. Mohon tunggu sebentar, admin akan membalas melalui email.',
+            data: {
+                id: application.id,
+                cvStorageKey: storedResume.key,
+                email: {
+                    applicant: emailStatus.userEmail.sent,
+                    admin: emailStatus.adminEmail.sent,
+                },
+            },
+        });
+    } catch (error) {
+        if (error.statusCode === 503) {
+            return res.status(503).json({
+                success: false,
+                message: 'Object storage belum dikonfigurasi. Silakan lengkapi environment variable storage terlebih dahulu.',
+            });
+        }
+
+        if (isStorageProviderError(error)) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.error('Object storage upload failed:', error.Code || error.code || error.message);
+            }
+
+            return res.status(502).json({
+                success: false,
+                message: 'Upload CV ke storage gagal. Silakan periksa konfigurasi Supabase Storage.',
+            });
+        }
+
+        serverError(res, error, 'Data belum berhasil dikirim. Silakan coba lagi beberapa saat.');
     }
 };
 
@@ -26,6 +174,11 @@ const createCareer = async (req, res) => {
     const thumbnail = req.file ? `/uploads/careers/${req.file.filename}` : null;
     
     try {
+        if (!(await ensureUniqueTitle(job_title))) {
+            cleanupUploadedFile(req);
+            return conflictError(res, 'job_title', 'Career title already exists');
+        }
+
         const result = await sequelize.query(
             'INSERT INTO careers (thumbnail, job_title, job_description, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
             {
@@ -35,7 +188,8 @@ const createCareer = async (req, res) => {
         );
         res.status(201).json({ id: result[0], thumbnail, job_title, job_description });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        cleanupUploadedFile(req);
+        serverError(res, error);
     }
 };
 
@@ -54,10 +208,17 @@ const updateCareer = async (req, res) => {
         );
 
         if (existingCareer.length === 0) {
-            return res.status(404).json({ message: 'Career not found' });
+            cleanupUploadedFile(req);
+            return notFound(res, 'Career not found');
+        }
+
+        if (job_title && !(await ensureUniqueTitle(job_title, id))) {
+            cleanupUploadedFile(req);
+            return conflictError(res, 'job_title', 'Career title already exists');
         }
 
         if (req.file) {
+            removeFile(existingCareer[0].thumbnail);
             thumbnail = `/uploads/careers/${req.file.filename}`;
         } else {
             thumbnail = existingCareer[0].thumbnail;
@@ -72,7 +233,8 @@ const updateCareer = async (req, res) => {
         );
         res.json({ message: 'Career updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        cleanupUploadedFile(req);
+        serverError(res, error);
     }
 };
 
@@ -88,12 +250,9 @@ const deleteCareer = async (req, res) => {
 
         if (careerResult.length > 0) {
             const career = careerResult[0];
-            if (career.thumbnail) {
-                const thumbnailPath = path.join(__dirname, '..', '..', career.thumbnail.replace('/uploads/', 'uploads/'));
-                if (fs.existsSync(thumbnailPath)) {
-                    fs.unlinkSync(thumbnailPath);
-                }
-            }
+            removeFile(career.thumbnail);
+        } else {
+            return notFound(res, 'Career not found');
         }
 
         await sequelize.query(
@@ -102,12 +261,13 @@ const deleteCareer = async (req, res) => {
         );
         res.json({ message: 'Career removed' });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        serverError(res, error);
     }
 };
 
 module.exports = {
     getAllCareers,
+    submitCareerApplication,
     createCareer,
     updateCareer,
     deleteCareer

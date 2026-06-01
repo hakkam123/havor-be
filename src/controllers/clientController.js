@@ -1,7 +1,22 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
+const {
+    cleanupUploadedFile,
+    conflictError,
+    notFound,
+    removeFile,
+    serverError,
+} = require('../utils/apiResponse');
+
+const ensureUniqueName = async (name, ignoreId = null) => {
+    const replacements = ignoreId ? [name, ignoreId] : [name];
+    const condition = ignoreId ? 'LOWER(name) = LOWER(?) AND id != ?' : 'LOWER(name) = LOWER(?)';
+    const existing = await sequelize.query(
+        `SELECT id FROM clients WHERE ${condition} LIMIT 1`,
+        { replacements, type: QueryTypes.SELECT }
+    );
+    return existing.length === 0;
+};
 
 const getAllClients = async (req, res) => {
     try {
@@ -11,7 +26,7 @@ const getAllClients = async (req, res) => {
         );
         res.json(clients);
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        serverError(res, error);
     }
 };
 
@@ -19,6 +34,11 @@ const createClient = async (req, res) => {
     const { name, description } = req.body; 
     const client_icon = req.file ? `/uploads/clients/${req.file.filename}` : null;
     try {
+        if (!(await ensureUniqueName(name))) {
+            cleanupUploadedFile(req);
+            return conflictError(res, 'name', 'Client name already exists');
+        }
+
         const result = await sequelize.query(
             'INSERT INTO clients (name, client_icon, description, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
             {
@@ -28,7 +48,8 @@ const createClient = async (req, res) => {
         );
         res.status(201).json({ id: result[0], name, client_icon, description });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        cleanupUploadedFile(req);
+        serverError(res, error);
     }
 };
 
@@ -44,10 +65,17 @@ const updateClient = async (req, res) => {
         );
 
         if (existingClient.length === 0) {
-            return res.status(404).json({ message: 'Client not found' });
+            cleanupUploadedFile(req);
+            return notFound(res, 'Client not found');
+        }
+
+        if (name && !(await ensureUniqueName(name, id))) {
+            cleanupUploadedFile(req);
+            return conflictError(res, 'name', 'Client name already exists');
         }
 
         if (req.file) {
+            removeFile(existingClient[0].client_icon);
             client_icon = `/uploads/clients/${req.file.filename}`;
         } else {
             client_icon = existingClient[0].client_icon;
@@ -62,7 +90,8 @@ const updateClient = async (req, res) => {
         );
         res.json({ message: 'Client updated successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        cleanupUploadedFile(req);
+        serverError(res, error);
     }
 };
 
@@ -75,12 +104,9 @@ const deleteClient = async (req, res) => {
 
         if (clientResult.length > 0) {
             const client = clientResult[0];
-            if (client.client_icon) {
-                const iconPath = path.join(__dirname, '..', '..', client.client_icon.replace('/uploads/', 'uploads/'));
-                if (fs.existsSync(iconPath)) {
-                    fs.unlinkSync(iconPath);
-                }
-            }
+            removeFile(client.client_icon);
+        } else {
+            return notFound(res, 'Client not found');
         }
 
         await sequelize.query(
@@ -89,7 +115,7 @@ const deleteClient = async (req, res) => {
         );
         res.json({ message: 'Client removed' });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
+        serverError(res, error);
     }
 };
 

@@ -1,5 +1,11 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const {
+  conflictError,
+  isDuplicateEntry,
+  notFound,
+  serverError,
+} = require('../utils/apiResponse');
 
 // @desc    Get all categories
 // @route   GET /api/categories
@@ -12,7 +18,7 @@ const getAllCategories = async (req, res) => {
     );
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -31,7 +37,10 @@ const createCategory = async (req, res) => {
     );
     res.status(201).json({ id: result[0], name });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    if (isDuplicateEntry(error)) {
+      return conflictError(res, 'name', 'Category name already exists');
+    }
+    serverError(res, error);
   }
 };
 
@@ -42,6 +51,14 @@ const updateCategory = async (req, res) => {
   const { name } = req.body;
   const { id } = req.params;
   try {
+    const existing = await sequelize.query(
+      'SELECT id FROM categories WHERE id = ?',
+      { replacements: [id], type: QueryTypes.SELECT }
+    );
+    if (existing.length === 0) {
+      return notFound(res, 'Category not found');
+    }
+
     await sequelize.query(
       'UPDATE categories SET name = ?, updatedAt = NOW() WHERE id = ?',
       {
@@ -51,7 +68,10 @@ const updateCategory = async (req, res) => {
     );
     res.json({ message : 'Category updated successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    if (isDuplicateEntry(error)) {
+      return conflictError(res, 'name', 'Category name already exists');
+    }
+    serverError(res, error);
   }
 };
 
@@ -60,6 +80,14 @@ const updateCategory = async (req, res) => {
 // @access  Private/Admin
 const deleteCategory = async (req, res) => {
   try {
+    const existing = await sequelize.query(
+      'SELECT id FROM categories WHERE id = ?',
+      { replacements: [req.params.id], type: QueryTypes.SELECT }
+    );
+    if (existing.length === 0) {
+      return notFound(res, 'Category not found');
+    }
+
     await sequelize.query(
       'DELETE FROM categories WHERE id = ?',
       {
@@ -69,7 +97,7 @@ const deleteCategory = async (req, res) => {
     );
     res.json({ message: 'Category removed' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 

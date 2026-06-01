@@ -1,7 +1,22 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
+const {
+  cleanupUploadedFile,
+  conflictError,
+  notFound,
+  removeFile,
+  serverError,
+} = require('../utils/apiResponse');
+
+const ensureUniqueTitle = async (title, ignoreId = null) => {
+  const replacements = ignoreId ? [title, ignoreId] : [title];
+  const condition = ignoreId ? 'LOWER(title) = LOWER(?) AND id != ?' : 'LOWER(title) = LOWER(?)';
+  const existing = await sequelize.query(
+    `SELECT id FROM works WHERE ${condition} LIMIT 1`,
+    { replacements, type: QueryTypes.SELECT }
+  );
+  return existing.length === 0;
+};
 
 // @desc    Get all works
 // @route   GET /api/works
@@ -17,7 +32,7 @@ const getAllWorks = async (req, res) => {
     );
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -28,6 +43,11 @@ const createWork = async (req, res) => {
   const { title, description, client, year, categoryId } = req.body;
   const image_url = req.file ? `/uploads/works/${req.file.filename}` : null;
   try {
+    if (!(await ensureUniqueTitle(title))) {
+      cleanupUploadedFile(req);
+      return conflictError(res, 'title', 'Work title already exists');
+    }
+
     const [result] = await sequelize.query(
       `INSERT INTO works (title, description, client, year, image_url, categoryId, createdAt, updatedAt) 
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -38,7 +58,8 @@ const createWork = async (req, res) => {
     );
     res.status(201).json({ id: result, title, description, client, year, image_url, categoryId });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -57,11 +78,13 @@ const updateWork = async (req, res) => {
       const { title, description, client, year, categoryId } = req.body;
       let image_url = work.image_url;
 
+      if (title && !(await ensureUniqueTitle(title, req.params.id))) {
+        cleanupUploadedFile(req);
+        return conflictError(res, 'title', 'Work title already exists');
+      }
+
       if (req.file) {
-        if (work.image_url) {
-          const oldPath = path.join(__dirname, '../../', work.image_url);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
+        removeFile(work.image_url);
         image_url = `/uploads/works/${req.file.filename}`;
       }
 
@@ -90,10 +113,12 @@ const updateWork = async (req, res) => {
       );
       res.json({ id: req.params.id, title, description, client, year, image_url, categoryId });
     } else {
-      res.status(404).json({ message: 'Work entry not found' });
+      cleanupUploadedFile(req);
+      notFound(res, 'Work entry not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -109,20 +134,17 @@ const deleteWork = async (req, res) => {
 
     if (works.length > 0) {
       const work = works[0];
-      if (work.image_url) {
-        const filePath = path.join(__dirname, '../../', work.image_url);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      }
+      removeFile(work.image_url);
       await sequelize.query(
         'DELETE FROM works WHERE id = ?',
         { replacements: [req.params.id], type: QueryTypes.DELETE }
       );
       res.json({ message: 'Work entry removed' });
     } else {
-      res.status(404).json({ message: 'Work entry not found' });
+      notFound(res, 'Work entry not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 

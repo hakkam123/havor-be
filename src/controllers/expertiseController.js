@@ -1,7 +1,22 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
+const {
+  cleanupUploadedFile,
+  conflictError,
+  notFound,
+  removeFile,
+  serverError,
+} = require('../utils/apiResponse');
+
+const ensureUniqueName = async (name, ignoreId = null) => {
+  const replacements = ignoreId ? [name, ignoreId] : [name];
+  const condition = ignoreId ? 'LOWER(name) = LOWER(?) AND id != ?' : 'LOWER(name) = LOWER(?)';
+  const existing = await sequelize.query(
+    `SELECT id FROM expertises WHERE ${condition} LIMIT 1`,
+    { replacements, type: QueryTypes.SELECT }
+  );
+  return existing.length === 0;
+};
 
 // @desc    Get all expertises
 // @route   GET /api/expertise
@@ -14,7 +29,7 @@ const getAllExpertises = async (req, res) => {
     );
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -25,6 +40,11 @@ const createExpertise = async (req, res) => {
   const { name, description } = req.body;
   const icon_url = req.file ? `/uploads/expertise/${req.file.filename}` : null;
   try {
+    if (!(await ensureUniqueName(name))) {
+      cleanupUploadedFile(req);
+      return conflictError(res, 'name', 'Expertise name already exists');
+    }
+
     const [result] = await sequelize.query(
       `INSERT INTO expertises (name, description, icon_url, createdAt, updatedAt) 
        VALUES (?, ?, ?, NOW(), NOW())`,
@@ -35,7 +55,8 @@ const createExpertise = async (req, res) => {
     );
     res.status(201).json({ id: result, name, description, icon_url });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -54,11 +75,13 @@ const updateExpertise = async (req, res) => {
       const { name, description } = req.body;
       let icon_url = data.icon_url;
 
+      if (name && !(await ensureUniqueName(name, req.params.id))) {
+        cleanupUploadedFile(req);
+        return conflictError(res, 'name', 'Expertise name already exists');
+      }
+
       if (req.file) {
-        if (data.icon_url) {
-          const oldPath = path.join(__dirname, '../../', data.icon_url);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
+        removeFile(data.icon_url);
         icon_url = `/uploads/expertise/${req.file.filename}`;
       }
 
@@ -81,10 +104,12 @@ const updateExpertise = async (req, res) => {
       );
       res.json({ id: req.params.id, name, description, icon_url });
     } else {
-      res.status(404).json({ message: 'Expertise not found' });
+      cleanupUploadedFile(req);
+      notFound(res, 'Expertise not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -100,20 +125,17 @@ const deleteExpertise = async (req, res) => {
 
     if (results.length > 0) {
       const data = results[0];
-      if (data.icon_url) {
-        const filePath = path.join(__dirname, '../../', data.icon_url);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      }
+      removeFile(data.icon_url);
       await sequelize.query(
         'DELETE FROM expertises WHERE id = ?',
         { replacements: [req.params.id], type: QueryTypes.DELETE }
       );
       res.json({ message: 'Expertise removed' });
     } else {
-      res.status(404).json({ message: 'Expertise not found' });
+      notFound(res, 'Expertise not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 

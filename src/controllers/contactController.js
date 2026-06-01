@@ -1,5 +1,7 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
+const { sendContactEmails } = require('../services/emailService');
+const { notFound, serverError } = require('../utils/apiResponse');
 
 // @desc    Submit contact message
 // @route   POST /api/contact
@@ -15,9 +17,24 @@ const submitMessage = async (req, res) => {
         type: QueryTypes.INSERT
       }
     );
-    res.status(201).json({ id: result, name, email, subject, message });
+
+    const emailStatus = await sendContactEmails({
+      message: { name, email, subject, message },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Pesan berhasil dikirim. Mohon tunggu sebentar, admin akan membalas melalui email.',
+      data: {
+        id: result,
+        email: {
+          sender: emailStatus.userEmail.sent,
+          admin: emailStatus.adminEmail.sent,
+        },
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error, 'Data belum berhasil dikirim. Silakan coba lagi beberapa saat.');
   }
 };
 
@@ -32,7 +49,7 @@ const getMessages = async (req, res) => {
     );
     res.json(messages);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -41,13 +58,21 @@ const getMessages = async (req, res) => {
 // @access  Private/Admin
 const markAsRead = async (req, res) => {
   try {
+    const existing = await sequelize.query(
+      'SELECT id FROM contact_messages WHERE id = ?',
+      { replacements: [req.params.id], type: QueryTypes.SELECT }
+    );
+    if (existing.length === 0) {
+      return notFound(res, 'Message not found');
+    }
+
     await sequelize.query(
       'UPDATE contact_messages SET is_read = 1, updatedAt = NOW() WHERE id = ?',
       { replacements: [req.params.id], type: QueryTypes.UPDATE }
     );
     res.json({ message: 'Message marked as read' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -56,13 +81,21 @@ const markAsRead = async (req, res) => {
 // @access  Private/Admin
 const deleteMessage = async (req, res) => {
   try {
+    const existing = await sequelize.query(
+      'SELECT id FROM contact_messages WHERE id = ?',
+      { replacements: [req.params.id], type: QueryTypes.SELECT }
+    );
+    if (existing.length === 0) {
+      return notFound(res, 'Message not found');
+    }
+
     await sequelize.query(
       'DELETE FROM contact_messages WHERE id = ?',
       { replacements: [req.params.id], type: QueryTypes.DELETE }
     );
     res.json({ message: 'Message removed' });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 

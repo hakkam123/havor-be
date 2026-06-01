@@ -1,21 +1,40 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
 const slugify = require('slugify');
+const {
+  cleanupUploadedFile,
+  conflictError,
+  notFound,
+  removeFile,
+  serverError,
+} = require('../utils/apiResponse');
+
+const makeSlug = (title) => slugify(title || '', { lower: true, strict: true });
+
+const ensureUniqueSlug = async (slug, ignoreId = null) => {
+  const replacements = ignoreId ? [slug, ignoreId] : [slug];
+  const condition = ignoreId ? 'slug = ? AND id != ?' : 'slug = ?';
+  const existing = await sequelize.query(
+    `SELECT id FROM news WHERE ${condition} LIMIT 1`,
+    { replacements, type: QueryTypes.SELECT }
+  );
+
+  return existing.length === 0;
+};
 
 // @desc    Get all news
 // @route   GET /api/news
 // @access  Public
 const getAllNews = async (req, res) => {
   try {
+    const whereClause = req.admin ? '' : 'WHERE is_published = 1';
     const news = await sequelize.query(
-      'SELECT * FROM news ORDER BY createdAt DESC',
+      `SELECT * FROM news ${whereClause} ORDER BY createdAt DESC`,
       { type: QueryTypes.SELECT }
     );
     res.json(news);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -25,16 +44,16 @@ const getAllNews = async (req, res) => {
 const getNewsBySlug = async (req, res) => {
   try {
     const news = await sequelize.query(
-      'SELECT * FROM news WHERE slug = ?',
+      'SELECT * FROM news WHERE slug = ? AND is_published = 1',
       { replacements: [req.params.slug], type: QueryTypes.SELECT }
     );
     if (news.length > 0) {
       res.json(news[0]);
     } else {
-      res.status(404).json({ message: 'News not found' });
+      notFound(res, 'News not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -43,11 +62,17 @@ const getNewsBySlug = async (req, res) => {
 // @access  Private/Admin
 const createNews = async (req, res) => {
   const { title, content, category, is_published } = req.body;
-  const slug = slugify(title, { lower: true, strict: true });
+  const slug = makeSlug(title);
   const image_url = req.file ? `/uploads/news/${req.file.filename}` : null;
   const published = is_published === 'true' || is_published === true ? 1 : 0;
 
   try {
+    const isUnique = await ensureUniqueSlug(slug);
+    if (!isUnique) {
+      cleanupUploadedFile(req);
+      return conflictError(res, 'title', 'A news item with this title already exists');
+    }
+
     const [result] = await sequelize.query(
       `INSERT INTO news (title, slug, content, category, is_published, image_url, createdAt, updatedAt) 
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -58,7 +83,8 @@ const createNews = async (req, res) => {
     );
     res.status(201).json({ id: result, title, slug, content, category, is_published: !!published, image_url });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -78,14 +104,16 @@ const updateNews = async (req, res) => {
       let { image_url, slug } = news;
 
       if (title) {
-        slug = slugify(title, { lower: true, strict: true });
+        slug = makeSlug(title);
+        const isUnique = await ensureUniqueSlug(slug, req.params.id);
+        if (!isUnique) {
+          cleanupUploadedFile(req);
+          return conflictError(res, 'title', 'A news item with this title already exists');
+        }
       }
 
       if (req.file) {
-        if (news.image_url) {
-          const oldPath = path.join(__dirname, '../../', news.image_url);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
+        removeFile(news.image_url);
         image_url = `/uploads/news/${req.file.filename}`;
       }
 
@@ -119,10 +147,12 @@ const updateNews = async (req, res) => {
       );
       res.json({ id: req.params.id, title, slug, content, category, is_published: !!published, image_url });
     } else {
-      res.status(404).json({ message: 'News not found' });
+      cleanupUploadedFile(req);
+      notFound(res, 'News not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -138,20 +168,17 @@ const deleteNews = async (req, res) => {
 
     if (newsResult.length > 0) {
       const news = newsResult[0];
-      if (news.image_url) {
-        const imagePath = path.join(__dirname, '../../', news.image_url);
-        if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
-      }
+      removeFile(news.image_url);
       await sequelize.query(
         'DELETE FROM news WHERE id = ?',
         { replacements: [req.params.id], type: QueryTypes.DELETE }
       );
       res.json({ message: 'News removed' });
     } else {
-      res.status(404).json({ message: 'News not found' });
+      notFound(res, 'News not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 

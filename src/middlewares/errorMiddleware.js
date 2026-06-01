@@ -1,8 +1,8 @@
 const errorHandler = (err, req, res, next) => {
-  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  let statusCode = err.statusCode || err.status || (res.statusCode === 200 ? 500 : res.statusCode);
 
   if (err.name === 'MulterError') {
-    statusCode = 400;
+    statusCode = err.code === 'LIMIT_FILE_SIZE' ? 422 : 400;
   }
 
   if (err.message === 'Not allowed by CORS') {
@@ -16,8 +16,10 @@ const errorHandler = (err, req, res, next) => {
 
   res.status(statusCode);
   res.json({
+    success: false,
     message,
-    stack: isProduction ? undefined : err.stack,
+    errors: statusCode < 500 ? { file: message } : undefined,
+    stack: statusCode >= 500 && !isProduction ? err.stack : undefined,
   });
 };
 

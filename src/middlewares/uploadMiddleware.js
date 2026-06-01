@@ -7,13 +7,17 @@ const uploadFolders = {
   news: 'news',
   banners: 'banners',
   careers: 'careers',
+  applications: 'career-applications',
   clients: 'clients',
   expertise: 'expertise',
+  profile: 'profile',
   products: 'products',
   works: 'works',
 };
 
 const getUploadFolder = (baseUrl) => {
+  if (baseUrl.includes('careers')) return uploadFolders.careers;
+
   const routeName = Object.keys(uploadFolders).find((name) => baseUrl.includes(name));
   return routeName ? uploadFolders[routeName] : '';
 };
@@ -38,6 +42,13 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (req, file, cb) => {
+  const documentFieldNames = new Set(['cv', 'resume', 'portfolio']);
+  const documentMimeTypes = new Set([
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ]);
+  const documentExtensions = new Set(['.pdf', '.doc', '.docx']);
   const allowedMimeTypes = new Set([
     'image/jpeg',
     'image/png',
@@ -49,11 +60,23 @@ const fileFilter = (req, file, cb) => {
   const allowedExtensions = new Set(['.jpeg', '.jpg', '.png', '.webp', '.mp4', '.mov', '.avi']);
   const extname = path.extname(file.originalname).toLowerCase();
 
+  if (documentFieldNames.has(file.fieldname)) {
+    if (documentExtensions.has(extname) && documentMimeTypes.has(file.mimetype)) {
+      return cb(null, true);
+    }
+
+    const error = new Error('CV or portfolio file must be PDF, DOC, or DOCX');
+    error.statusCode = 422;
+    return cb(error);
+  }
+
   if (allowedExtensions.has(extname) && allowedMimeTypes.has(file.mimetype)) {
     return cb(null, true);
   }
 
-  cb(new Error('Only images (jpg, png, webp) and videos (mp4, mov, avi) are allowed'));
+  const error = new Error('Only images (jpg, png, webp) and videos (mp4, mov, avi) are allowed');
+  error.statusCode = 422;
+  cb(error);
 };
 
 const upload = multer({
@@ -62,4 +85,25 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
-module.exports = { upload };
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const isPdf = extension === '.pdf' && file.mimetype === 'application/pdf';
+
+    if (isPdf) return cb(null, true);
+
+    const error = new Error('CV harus berupa file PDF.');
+    error.statusCode = 422;
+    return cb(error);
+  },
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
+
+const normalizeResumeFile = (req, res, next) => {
+  const resume = req.files?.resume?.[0] || req.files?.cv?.[0] || null;
+  req.file = resume;
+  next();
+};
+
+module.exports = { normalizeResumeFile, resumeUpload, upload };

@@ -7,12 +7,12 @@ const {
   updateNews, 
   deleteNews 
 } = require('../controllers/newsController');
-const { protect } = require('../middlewares/authMiddleware');
+const { optionalAdmin, protect } = require('../middlewares/authMiddleware');
 const { upload } = require('../middlewares/uploadMiddleware');
 const { validate } = require('../middlewares/securityMiddleware');
 const schemas = require('../validations/requestSchemas');
 
-router.get('/', getAllNews);
+router.get('/', optionalAdmin, getAllNews);
 router.get('/:slug', getNewsBySlug);
 
 // Protected routes

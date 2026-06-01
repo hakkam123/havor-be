@@ -1,7 +1,14 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
+const {
+  cleanupUploadedFile,
+  conflictError,
+  isDuplicateEntry,
+  notFound,
+  removeFile,
+  serverError,
+  validationError,
+} = require('../utils/apiResponse');
 
 // @desc    Get all banners
 // @route   GET /api/banners
@@ -14,7 +21,7 @@ const getAllBanners = async (req, res) => {
     );
     res.json(banners);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -30,10 +37,10 @@ const getBannerByPage = async (req, res) => {
     if (banners.length > 0) {
       res.json(banners[0]);
     } else {
-      res.status(404).json({ message: 'Banner not found for this page' });
+      notFound(res, 'Banner not found for this page');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -44,7 +51,7 @@ const upsertBanner = async (req, res) => {
   const { page_name, title, subtitle, media_type } = req.body;
   
   if (!req.file && !req.body.media_url) {
-    return res.status(400).json({ message: 'Media file or URL is required' });
+    return validationError(res, { media_url: 'Media file or URL is required' });
   }
 
   try {
@@ -59,8 +66,7 @@ const upsertBanner = async (req, res) => {
       // Update
       const banner = banners[0];
       if (req.file && banner.media_url && banner.media_url.startsWith('/uploads')) {
-        const oldPath = path.join(__dirname, '../../', banner.media_url);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        removeFile(banner.media_url);
       }
       
       await sequelize.query(
@@ -97,7 +103,11 @@ const upsertBanner = async (req, res) => {
       res.status(201).json({ id: result, page_name, title, subtitle, media_url, media_type: type });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    if (isDuplicateEntry(error)) {
+      return conflictError(res, 'page_name', 'Banner page name already exists');
+    }
+    serverError(res, error);
   }
 };
 
@@ -114,8 +124,7 @@ const deleteBanner = async (req, res) => {
     if (banners.length > 0) {
       const banner = banners[0];
       if (banner.media_url && banner.media_url.startsWith('/uploads')) {
-        const mediaPath = path.join(__dirname, '../../', banner.media_url);
-        if (fs.existsSync(mediaPath)) fs.unlinkSync(mediaPath);
+        removeFile(banner.media_url);
       }
       await sequelize.query(
         'DELETE FROM hero_banners WHERE id = ?',
@@ -123,10 +132,10 @@ const deleteBanner = async (req, res) => {
       );
       res.json({ message: 'Banner removed' });
     } else {
-      res.status(404).json({ message: 'Banner not found' });
+      notFound(res, 'Banner not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 

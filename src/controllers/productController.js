@@ -1,7 +1,22 @@
 const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
+const {
+  cleanupUploadedFile,
+  conflictError,
+  notFound,
+  removeFile,
+  serverError,
+} = require('../utils/apiResponse');
+
+const ensureUniqueName = async (name, ignoreId = null) => {
+  const replacements = ignoreId ? [name, ignoreId] : [name];
+  const condition = ignoreId ? 'LOWER(name) = LOWER(?) AND id != ?' : 'LOWER(name) = LOWER(?)';
+  const existing = await sequelize.query(
+    `SELECT id FROM products WHERE ${condition} LIMIT 1`,
+    { replacements, type: QueryTypes.SELECT }
+  );
+  return existing.length === 0;
+};
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -17,7 +32,7 @@ const getAllProducts = async (req, res) => {
     );
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
@@ -28,6 +43,11 @@ const createProduct = async (req, res) => {
   const { name, description, external_link, categoryId } = req.body;
   const image_url = req.file ? `/uploads/products/${req.file.filename}` : null;
   try {
+    if (!(await ensureUniqueName(name))) {
+      cleanupUploadedFile(req);
+      return conflictError(res, 'name', 'Product name already exists');
+    }
+
     const [result] = await sequelize.query(
       `INSERT INTO products (name, description, image_url, external_link, categoryId, createdAt, updatedAt) 
        VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -38,7 +58,8 @@ const createProduct = async (req, res) => {
     );
     res.status(201).json({ id: result, name, description, image_url, external_link, categoryId });
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -57,11 +78,13 @@ const updateProduct = async (req, res) => {
       const { name, description, external_link, categoryId } = req.body;
       let image_url = product.image_url;
 
+      if (name && !(await ensureUniqueName(name, req.params.id))) {
+        cleanupUploadedFile(req);
+        return conflictError(res, 'name', 'Product name already exists');
+      }
+
       if (req.file) {
-        if (product.image_url) {
-          const oldPath = path.join(__dirname, '../../', product.image_url);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
+        removeFile(product.image_url);
         image_url = `/uploads/products/${req.file.filename}`;
       }
 
@@ -88,10 +111,12 @@ const updateProduct = async (req, res) => {
       );
       res.json({ id: req.params.id, name, description, image_url, categoryId });
     } else {
-      res.status(404).json({ message: 'Product not found' });
+      cleanupUploadedFile(req);
+      notFound(res, 'Product not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    cleanupUploadedFile(req);
+    serverError(res, error);
   }
 };
 
@@ -107,20 +132,17 @@ const deleteProduct = async (req, res) => {
 
     if (products.length > 0) {
       const product = products[0];
-      if (product.image_url) {
-        const filePath = path.join(__dirname, '../../', product.image_url);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      }
+      removeFile(product.image_url);
       await sequelize.query(
         'DELETE FROM products WHERE id = ?',
         { replacements: [req.params.id], type: QueryTypes.DELETE }
       );
       res.json({ message: 'Product removed' });
     } else {
-      res.status(404).json({ message: 'Product not found' });
+      notFound(res, 'Product not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    serverError(res, error);
   }
 };
 
