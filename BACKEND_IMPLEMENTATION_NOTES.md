@@ -106,6 +106,7 @@ Jika file bukan PDF, API mengembalikan:
 PORT=
 NODE_ENV=
 FRONTEND_URL=
+APP_BASE_PATH=/havor
 ADMIN_EMAIL=
 
 GMAIL_USER=
@@ -278,3 +279,11 @@ Frontend:
 Frontend bisa dipush seperti biasa selama environment staging sudah punya `VITE_API_BASE_URL` yang mengarah ke backend API production/staging.
 
 Backend saat upload ulang ke cPanel wajib dipastikan `.env` production berisi database, Gmail, CORS frontend, dan Supabase Storage S3-compatible env. Jangan upload file `.env` ke Git.
+
+Jika cPanel Application URL memakai subpath seperti `https://tplnext.com/havor`, isi:
+
+```env
+APP_BASE_PATH=/havor
+```
+
+Dengan konfigurasi ini, API tersedia di `https://tplnext.com/havor/api/...`.

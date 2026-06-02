@@ -16,7 +16,7 @@ const toValidationErrors = (details = []) => {
   }, {});
 };
 
-const validationError = (res, errors, message = 'Mohon periksa kembali data yang wajib diisi.', statusCode = 422) => {
+const validationError = (res, errors, message = 'Please review the required fields and try again.', statusCode = 422) => {
   return res.status(statusCode).json({
     success: false,
     message,

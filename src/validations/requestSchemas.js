@@ -129,42 +129,42 @@ const career = {
   }),
   application: Joi.object({
     fullName: Joi.string().trim().min(2).max(255).required().messages({
-      'any.required': 'Nama panjang wajib diisi.',
-      'string.empty': 'Nama panjang wajib diisi.',
-      'string.min': 'Nama panjang minimal 2 karakter.',
+      'any.required': 'Full name is required.',
+      'string.empty': 'Full name is required.',
+      'string.min': 'Full name must contain at least 2 characters.',
     }),
     email: Joi.string().email().max(255).required().messages({
-      'any.required': 'Email wajib diisi.',
-      'string.empty': 'Email wajib diisi.',
-      'string.email': 'Masukkan email yang valid, contoh nama@gmail.com.',
+      'any.required': 'Email is required.',
+      'string.empty': 'Email is required.',
+      'string.email': 'Please enter a valid email address, for example name@gmail.com.',
     }),
     phone: Joi.string().trim().required().custom(validatePhoneNumber).messages({
-      'any.required': 'Nomor telepon wajib diisi.',
-      'string.empty': 'Nomor telepon wajib diisi.',
-      'phone.invalidCharacters': 'Nomor telepon hanya boleh berisi angka, spasi, tanda +, -, atau ().',
-      'phone.minDigits': 'Nomor telepon minimal 10 digit.',
-      'phone.maxDigits': 'Nomor telepon maksimal 15 digit.',
+      'any.required': 'Phone number is required.',
+      'string.empty': 'Phone number is required.',
+      'phone.invalidCharacters': 'Phone number may only contain numbers, spaces, +, -, or parentheses.',
+      'phone.minDigits': 'Phone number must contain at least 10 digits.',
+      'phone.maxDigits': 'Phone number may contain up to 15 digits.',
     }),
     address: Joi.string().trim().max(5000).allow('', null),
     position: Joi.string().trim().min(2).max(255).required().messages({
-      'any.required': 'Posisi yang dilamar wajib dipilih.',
-      'string.empty': 'Posisi yang dilamar wajib dipilih.',
+      'any.required': 'Please select the position you are applying for.',
+      'string.empty': 'Please select the position you are applying for.',
     }),
     latestEducation: Joi.string().trim().max(255).allow('', null),
     experienceSummary: Joi.string().trim().max(255).allow('', null),
     portfolioUrl: Joi.string().trim().max(2048).allow('', null).custom(normalizeOptionalUrl).messages({
-      'url.invalid': 'Masukkan URL yang valid, contoh https://www.google.com.',
+      'url.invalid': 'Please enter a valid URL, for example https://www.google.com.',
     }),
     message: Joi.string().trim().min(5).max(10000).messages({
-      'string.empty': 'Pesan atau cover letter singkat wajib diisi.',
-      'string.min': 'Pesan atau cover letter minimal 5 karakter.',
+      'string.empty': 'A short message or cover letter is required.',
+      'string.min': 'Message or cover letter must contain at least 5 characters.',
     }),
     coverLetter: Joi.string().trim().min(5).max(10000).messages({
-      'string.empty': 'Pesan atau cover letter singkat wajib diisi.',
-      'string.min': 'Pesan atau cover letter minimal 5 karakter.',
+      'string.empty': 'A short message or cover letter is required.',
+      'string.min': 'Message or cover letter must contain at least 5 characters.',
     }),
   }).or('message', 'coverLetter').messages({
-    'object.missing': 'Pesan atau cover letter singkat wajib diisi.',
+    'object.missing': 'A short message or cover letter is required.',
   }),
 };
 

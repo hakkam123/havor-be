@@ -65,7 +65,7 @@ const fileFilter = (req, file, cb) => {
       return cb(null, true);
     }
 
-    const error = new Error('CV or portfolio file must be PDF, DOC, or DOCX');
+    const error = new Error('Resume or portfolio file must be PDF, DOC, or DOCX.');
     error.statusCode = 422;
     return cb(error);
   }
@@ -93,7 +93,7 @@ const resumeUpload = multer({
 
     if (isPdf) return cb(null, true);
 
-    const error = new Error('CV harus berupa file PDF.');
+    const error = new Error('Resume must be a PDF file.');
     error.statusCode = 422;
     return cb(error);
   },

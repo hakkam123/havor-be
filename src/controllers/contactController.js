@@ -24,7 +24,7 @@ const submitMessage = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Pesan berhasil dikirim. Mohon tunggu sebentar, admin akan membalas melalui email.',
+      message: 'Your message has been sent successfully. Please wait while our team reviews your submission. We will contact you by email.',
       data: {
         id: result,
         email: {
@@ -34,7 +34,7 @@ const submitMessage = async (req, res) => {
       },
     });
   } catch (error) {
-    serverError(res, error, 'Data belum berhasil dikirim. Silakan coba lagi beberapa saat.');
+    serverError(res, error, 'We could not submit your message. Please try again in a moment.');
   }
 };
 

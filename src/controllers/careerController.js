@@ -48,6 +48,39 @@ const getAllCareers = async (req, res) => {
     }
 };
 
+// @desc    Get career applications
+// @route   GET /api/careers/applications
+// @access  Private/Admin
+const getCareerApplications = async (req, res) => {
+    try {
+        const applications = await sequelize.query(
+            'SELECT * FROM career_applications ORDER BY createdAt DESC',
+            { type: QueryTypes.SELECT }
+        );
+
+        const applicationsWithResumeLinks = await Promise.all(applications.map(async (application) => {
+            if (!application.cv_storage_key) return application;
+
+            try {
+                return {
+                    ...application,
+                    cv_signed_url: await getSignedObjectUrl(application.cv_storage_key),
+                };
+            } catch (signedUrlError) {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.error('Failed to create application resume signed URL:', signedUrlError.message);
+                }
+
+                return application;
+            }
+        }));
+
+        res.json(applicationsWithResumeLinks);
+    } catch (error) {
+        serverError(res, error);
+    }
+};
+
 // @desc    Submit public career application
 // @route   POST /api/careers
 // @access  Public
@@ -68,7 +101,7 @@ const submitCareerApplication = async (req, res) => {
     if (!req.file) {
         return res.status(422).json({
             success: false,
-            message: 'CV wajib diupload.',
+            message: 'Please upload your resume as a PDF.',
         });
     }
 
@@ -133,7 +166,7 @@ const submitCareerApplication = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: 'Lamaran berhasil dikirim. Mohon tunggu sebentar, admin akan membalas melalui email.',
+            message: 'Your application has been submitted successfully. Please wait while our team reviews your submission. We will contact you by email.',
             data: {
                 id: application.id,
                 cvStorageKey: storedResume.key,
@@ -147,7 +180,7 @@ const submitCareerApplication = async (req, res) => {
         if (error.statusCode === 503) {
             return res.status(503).json({
                 success: false,
-                message: 'Object storage belum dikonfigurasi. Silakan lengkapi environment variable storage terlebih dahulu.',
+                message: 'Object storage is not configured yet. Please complete the storage environment variables first.',
             });
         }
 
@@ -158,11 +191,11 @@ const submitCareerApplication = async (req, res) => {
 
             return res.status(502).json({
                 success: false,
-                message: 'Upload CV ke storage gagal. Silakan periksa konfigurasi Supabase Storage.',
+                message: 'Resume upload to storage failed. Please check the Supabase Storage configuration.',
             });
         }
 
-        serverError(res, error, 'Data belum berhasil dikirim. Silakan coba lagi beberapa saat.');
+        serverError(res, error, 'We could not submit your application. Please try again in a moment.');
     }
 };
 
@@ -267,6 +300,7 @@ const deleteCareer = async (req, res) => {
 
 module.exports = {
     getAllCareers,
+    getCareerApplications,
     submitCareerApplication,
     createCareer,
     updateCareer,

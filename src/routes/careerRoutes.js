@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     getAllCareers,
+    getCareerApplications,
     submitCareerApplication,
     createCareer,
     updateCareer,
@@ -13,6 +14,7 @@ const { createRateLimiter, validate } = require('../middlewares/securityMiddlewa
 const schemas = require('../validations/requestSchemas');
 
 router.get('/', getAllCareers);
+router.get('/applications', protect, getCareerApplications);
 
 const applicationRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
@@ -24,13 +26,13 @@ const handleApplicationUploadError = (res, uploadError) => {
   if (uploadError.code === 'LIMIT_FILE_SIZE') {
     return res.status(422).json({
       success: false,
-      message: 'Ukuran CV maksimal 2 MB.',
+      message: 'Resume size must be no more than 2 MB.',
     });
   }
 
   return res.status(uploadError.statusCode || 400).json({
     success: false,
-    message: uploadError.message || 'Upload CV gagal.',
+    message: uploadError.message || 'Resume upload failed.',
   });
 };
 

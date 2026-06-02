@@ -35,12 +35,16 @@ const contactRoutes = require('./routes/contactRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 
 const app = express();
+const appBasePath = String(process.env.APP_BASE_PATH || '/havor').replace(/\/+$/, '');
+const uploadsPath = path.join(__dirname, '../uploads');
 
 connectDB();
 
+const normalizeOrigin = (origin) => String(origin || '').trim().replace(/\/+$/, '');
+
 const configuredOrigins = String(process.env.ALLOWED_ORIGINS || '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 
 const allowedOrigins = [
@@ -51,14 +55,14 @@ const allowedOrigins = [
   'http://localhost:3005',
   'https://havorsmarta.netlify.app',
   'https://admin.havor.com',
-  process.env.FRONTEND_URL,
-  process.env.APP_URL,
+  normalizeOrigin(process.env.FRONTEND_URL),
+  normalizeOrigin(process.env.APP_URL),
   ...configuredOrigins,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
       return callback(null, true);
     }
 
@@ -74,26 +78,41 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+const serveUploads = express.static(uploadsPath, {
   dotfiles: 'deny',
   index: false,
-}));
+});
 
-app.use('/api/auth', authRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/banners', bannerRoutes);
-app.use('/api/expertise', expertiseRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/clients', clientRoutes);
-app.use('/api/careers', careerRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/works', workRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/profile', profileRoutes);
+const registerRoutes = (prefix = '') => {
+  app.use(`${prefix}/uploads`, serveUploads);
+  app.use(`${prefix}/api/auth`, authRoutes);
+  app.use(`${prefix}/api/news`, newsRoutes);
+  app.use(`${prefix}/api/banners`, bannerRoutes);
+  app.use(`${prefix}/api/expertise`, expertiseRoutes);
+  app.use(`${prefix}/api/categories`, categoryRoutes);
+  app.use(`${prefix}/api/clients`, clientRoutes);
+  app.use(`${prefix}/api/careers`, careerRoutes);
+  app.use(`${prefix}/api/products`, productRoutes);
+  app.use(`${prefix}/api/works`, workRoutes);
+  app.use(`${prefix}/api/contact`, contactRoutes);
+  app.use(`${prefix}/api/profile`, profileRoutes);
+};
+
+registerRoutes();
+
+if (appBasePath && appBasePath !== '/') {
+  registerRoutes(appBasePath);
+}
 
 app.get('/', (req, res) => {
   res.send('PT Havor Smarta Technology API is running...');
 });
+
+if (appBasePath && appBasePath !== '/') {
+  app.get(appBasePath, (req, res) => {
+    res.send('PT Havor Smarta Technology API is running...');
+  });
+}
 
 app.use(errorHandler);
 
