@@ -19,6 +19,7 @@ const toValidationErrors = (details = []) => {
 const validationError = (res, errors, message = 'Please review the required fields and try again.', statusCode = 422) => {
   return res.status(statusCode).json({
     success: false,
+    code: statusCode === 409 ? 'CONFLICT' : 'VALIDATION_ERROR',
     message,
     errors,
   });
@@ -27,6 +28,7 @@ const validationError = (res, errors, message = 'Please review the required fiel
 const notFound = (res, message = 'Resource not found') => {
   return res.status(404).json({
     success: false,
+    code: 'NOT_FOUND',
     message,
   });
 };
@@ -38,12 +40,24 @@ const serverError = (res, error, message = 'Internal server error') => {
 
   return res.status(500).json({
     success: false,
+    code: 'INTERNAL_SERVER_ERROR',
     message,
   });
 };
 
 const conflictError = (res, field, message) => {
-  return validationError(res, { [field]: message }, 'Validation failed', 409);
+  return validationError(res, { [field]: message }, message, 409);
+};
+
+const relationError = (res, field, message) => {
+  return res.status(409).json({
+    success: false,
+    code: 'RESOURCE_IN_USE',
+    message,
+    errors: {
+      [field]: message,
+    },
+  });
 };
 
 const isDuplicateEntry = (error) => {
@@ -74,6 +88,7 @@ module.exports = {
   isDuplicateEntry,
   notFound,
   removeFile,
+  relationError,
   serverError,
   toValidationErrors,
   validationError,

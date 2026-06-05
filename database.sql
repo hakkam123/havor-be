@@ -32,10 +32,13 @@ CREATE TABLE `admin_sessions` (
 
 CREATE TABLE `categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL UNIQUE,
+  `name` varchar(255) NOT NULL,
+  `type` enum('News','Career','Campaign','Product') NOT NULL DEFAULT 'Product',
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `categories_type_name_unique` (`type`, `name`),
+  KEY `categories_type_idx` (`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `news` (
@@ -48,7 +51,25 @@ CREATE TABLE `news` (
   `is_published` tinyint(1) DEFAULT 0,
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `news_published_created_idx` (`is_published`, `createdAt`),
+  KEY `news_category_idx` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `campaigns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL UNIQUE,
+  `content` text NOT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  `category` varchar(255) DEFAULT NULL,
+  `is_published` tinyint(1) DEFAULT 0,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `campaigns_published_created_idx` (`is_published`, `createdAt`),
+  KEY `campaigns_slug_idx` (`slug`),
+  KEY `campaigns_category_idx` (`category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `hero_banners` (
@@ -88,9 +109,12 @@ CREATE TABLE `careers` (
   `thumbnail` varchar(255) DEFAULT NULL,
   `job_title` varchar(255) NOT NULL,
   `job_description` text NOT NULL,
+  `categoryId` int(11) DEFAULT NULL,
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `careers_category_created_idx` (`categoryId`, `createdAt`),
+  CONSTRAINT `careers_category_fk` FOREIGN KEY (`categoryId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `products` (
@@ -103,6 +127,7 @@ CREATE TABLE `products` (
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
   PRIMARY KEY (`id`),
+  KEY `products_category_created_idx` (`categoryId`, `createdAt`),
   CONSTRAINT `products_category_fk` FOREIGN KEY (`categoryId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -117,6 +142,7 @@ CREATE TABLE `works` (
   `createdAt` datetime NOT NULL,
   `updatedAt` datetime NOT NULL,
   PRIMARY KEY (`id`),
+  KEY `works_category_created_idx` (`categoryId`, `createdAt`),
   CONSTRAINT `works_category_fk` FOREIGN KEY (`categoryId`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

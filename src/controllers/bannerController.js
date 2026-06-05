@@ -9,17 +9,36 @@ const {
   serverError,
   validationError,
 } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 // @desc    Get all banners
 // @route   GET /api/banners
 // @access  Public
 const getAllBanners = async (req, res) => {
   try {
+    const pagination = getPagination(req.query);
+    const replacements = [];
+    const where = [];
+    const search = String(req.query.search || '').trim();
+
+    if (search) {
+      const keyword = `%${search}%`;
+      where.push('(page_name LIKE ? OR title LIKE ? OR subtitle LIKE ? OR media_type LIKE ?)');
+      replacements.push(keyword, keyword, keyword, keyword);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countResult = pagination
+      ? await sequelize.query(`SELECT COUNT(*) AS total FROM hero_banners ${whereClause}`, { replacements, type: QueryTypes.SELECT })
+      : [{ total: 0 }];
+    const dataReplacements = [...replacements];
+    const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+    if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
     const banners = await sequelize.query(
-      'SELECT * FROM hero_banners',
-      { type: QueryTypes.SELECT }
+      `SELECT * FROM hero_banners ${whereClause} ORDER BY page_name ASC${paginationSql}`,
+      { replacements: dataReplacements, type: QueryTypes.SELECT }
     );
-    res.json(banners);
+    sendListResponse(res, banners, pagination, countResult[0]?.total);
   } catch (error) {
     serverError(res, error);
   }

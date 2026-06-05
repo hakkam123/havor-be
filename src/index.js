@@ -10,6 +10,7 @@ const { errorHandler } = require('./middlewares/errorMiddleware');
 
 require('./models/Admin');
 require('./models/AdminSession');
+require('./models/Campaign');
 require('./models/Career');
 require('./models/CareerApplication');
 require('./models/Category');
@@ -29,6 +30,7 @@ const expertiseRoutes = require('./routes/expertiseRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const careerRoutes = require('./routes/careerRoutes');
+const campaignRoutes = require('./routes/campaignRoutes');
 const productRoutes = require('./routes/productRoutes');
 const workRoutes = require('./routes/workRoutes');
 const contactRoutes = require('./routes/contactRoutes');
@@ -90,6 +92,7 @@ const registerRoutes = (prefix = '') => {
   app.use(`${prefix}/api/banners`, bannerRoutes);
   app.use(`${prefix}/api/expertise`, expertiseRoutes);
   app.use(`${prefix}/api/categories`, categoryRoutes);
+  app.use(`${prefix}/api/campaigns`, campaignRoutes);
   app.use(`${prefix}/api/clients`, clientRoutes);
   app.use(`${prefix}/api/careers`, careerRoutes);
   app.use(`${prefix}/api/products`, productRoutes);

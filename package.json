@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.js",
     "seed": "node src/seedAdmin.js",
     "seed:data": "node src/seedData.js",
-    "seed:realistic": "node src/seedRealisticData.js",
+    "seed:realistic": "node src/SeedRealistic.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

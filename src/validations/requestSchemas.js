@@ -17,9 +17,11 @@ const auth = {
 const category = {
   create: Joi.object({
     name: Joi.string().trim().min(2).max(255).required(),
+    type: Joi.string().valid('News', 'Career', 'Campaign', 'Product', 'news', 'product').default('Product'),
   }),
   update: Joi.object({
     name: Joi.string().trim().min(2).max(255).required(),
+    type: Joi.string().valid('News', 'Career', 'Campaign', 'Product', 'news', 'product').default('Product'),
   }),
 };
 
@@ -86,6 +88,21 @@ const news = {
   }),
 };
 
+const campaign = {
+  create: Joi.object({
+    title: Joi.string().trim().min(2).max(255).required(),
+    content: Joi.string().trim().min(1).max(100000).required(),
+    category: Joi.string().trim().max(255).allow('', null),
+    is_published: Joi.boolean().truthy('true').falsy('false').default(false),
+  }),
+  update: Joi.object({
+    title: Joi.string().trim().min(2).max(255),
+    content: Joi.string().trim().min(1).max(100000),
+    category: Joi.string().trim().max(255).allow('', null),
+    is_published: Joi.boolean().truthy('true').falsy('false'),
+  }),
+};
+
 const product = {
   create: Joi.object({
     name: Joi.string().trim().min(2).max(255).required(),
@@ -122,10 +139,12 @@ const career = {
   create: Joi.object({
     job_title: Joi.string().trim().min(2).max(255).required(),
     job_description: Joi.string().trim().min(1).max(100000).required(),
+    categoryId: Joi.number().integer().positive().empty('').allow(null),
   }),
   update: Joi.object({
     job_title: Joi.string().trim().min(2).max(255).required(),
     job_description: Joi.string().trim().min(1).max(100000).required(),
+    categoryId: Joi.number().integer().positive().empty('').allow(null),
   }),
   application: Joi.object({
     fullName: Joi.string().trim().min(2).max(255).required().messages({
@@ -212,6 +231,7 @@ module.exports = {
   idParam,
   auth,
   banner,
+  campaign,
   career,
   category,
   client,

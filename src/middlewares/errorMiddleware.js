@@ -17,6 +17,7 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode);
   res.json({
     success: false,
+    code: err.code || (statusCode === 403 ? 'FORBIDDEN' : statusCode >= 500 ? 'INTERNAL_SERVER_ERROR' : 'REQUEST_ERROR'),
     message,
     errors: statusCode < 500 ? { file: message } : undefined,
     stack: statusCode >= 500 && !isProduction ? err.stack : undefined,

@@ -10,10 +10,23 @@ const Category = sequelize.define('Category', {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
+  },
+  type: {
+    type: DataTypes.ENUM('News', 'Career', 'Campaign', 'Product'),
+    allowNull: false,
+    defaultValue: 'Product',
   },
 }, {
   tableName: 'categories',
+  indexes: [
+    {
+      unique: true,
+      fields: ['type', 'name'],
+    },
+    {
+      fields: ['type'],
+    },
+  ],
 });
 
 module.exports = Category;

@@ -7,6 +7,7 @@ const {
     removeFile,
     serverError,
 } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueName = async (name, ignoreId = null) => {
     const replacements = ignoreId ? [name, ignoreId] : [name];
@@ -20,11 +21,29 @@ const ensureUniqueName = async (name, ignoreId = null) => {
 
 const getAllClients = async (req, res) => {
     try {
+        const pagination = getPagination(req.query);
+        const replacements = [];
+        const where = [];
+        const search = String(req.query.search || '').trim();
+
+        if (search) {
+            const keyword = `%${search}%`;
+            where.push('(name LIKE ? OR description LIKE ?)');
+            replacements.push(keyword, keyword);
+        }
+
+        const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+        const countResult = pagination
+            ? await sequelize.query(`SELECT COUNT(*) AS total FROM clients ${whereClause}`, { replacements, type: QueryTypes.SELECT })
+            : [{ total: 0 }];
+        const dataReplacements = [...replacements];
+        const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+        if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
         const clients = await sequelize.query(
-            'SELECT * FROM clients ORDER BY name ASC',
-            { type: QueryTypes.SELECT }
+            `SELECT * FROM clients ${whereClause} ORDER BY name ASC${paginationSql}`,
+            { replacements: dataReplacements, type: QueryTypes.SELECT }
         );
-        res.json(clients);
+        sendListResponse(res, clients, pagination, countResult[0]?.total);
     } catch (error) {
         serverError(res, error);
     }

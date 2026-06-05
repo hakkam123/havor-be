@@ -80,10 +80,12 @@ const buildExpertiseSeeds = (expertiseIcons) => [
 
 const buildCategorySeeds = () => [
   {
-    name: 'Cara "Sehat"'
+    name: 'Cara "Sehat"',
+    type: 'Product'
   },
   {
-    name: 'Software'
+    name: 'Software',
+    type: 'Product'
   }
 ];
 

@@ -42,6 +42,7 @@ const createRateLimiter = ({ windowMs, max, message }) => {
       res.set('Retry-After', Math.ceil((current.resetAt - now) / 1000));
       return res.status(429).json({
         success: false,
+        code: 'RATE_LIMITED',
         message,
       });
     }

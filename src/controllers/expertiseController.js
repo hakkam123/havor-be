@@ -7,6 +7,7 @@ const {
   removeFile,
   serverError,
 } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueName = async (name, ignoreId = null) => {
   const replacements = ignoreId ? [name, ignoreId] : [name];
@@ -23,11 +24,29 @@ const ensureUniqueName = async (name, ignoreId = null) => {
 // @access  Public
 const getAllExpertises = async (req, res) => {
   try {
+    const pagination = getPagination(req.query);
+    const replacements = [];
+    const where = [];
+    const search = String(req.query.search || '').trim();
+
+    if (search) {
+      const keyword = `%${search}%`;
+      where.push('(name LIKE ? OR description LIKE ?)');
+      replacements.push(keyword, keyword);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countResult = pagination
+      ? await sequelize.query(`SELECT COUNT(*) AS total FROM expertises ${whereClause}`, { replacements, type: QueryTypes.SELECT })
+      : [{ total: 0 }];
+    const dataReplacements = [...replacements];
+    const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+    if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
     const data = await sequelize.query(
-      'SELECT * FROM expertises ORDER BY createdAt DESC',
-      { type: QueryTypes.SELECT }
+      `SELECT * FROM expertises ${whereClause} ORDER BY createdAt DESC${paginationSql}`,
+      { replacements: dataReplacements, type: QueryTypes.SELECT }
     );
-    res.json(data);
+    sendListResponse(res, data, pagination, countResult[0]?.total);
   } catch (error) {
     serverError(res, error);
   }

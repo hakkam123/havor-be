@@ -8,6 +8,7 @@ const {
   removeFile,
   serverError,
 } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const makeSlug = (title) => slugify(title || '', { lower: true, strict: true });
 
@@ -27,12 +28,44 @@ const ensureUniqueSlug = async (slug, ignoreId = null) => {
 // @access  Public
 const getAllNews = async (req, res) => {
   try {
-    const whereClause = req.admin ? '' : 'WHERE is_published = 1';
+    const pagination = getPagination(req.query);
+    const replacements = [];
+    const where = [];
+    const search = String(req.query.search || '').trim();
+    const status = String(req.query.status || 'all').toLowerCase();
+    const category = String(req.query.category || '').trim();
+
+    if (!req.admin) {
+      where.push('is_published = 1');
+    } else if (status === 'published') {
+      where.push('is_published = 1');
+    } else if (status === 'draft') {
+      where.push('is_published = 0');
+    }
+
+    if (search) {
+      const keyword = `%${search}%`;
+      where.push('(title LIKE ? OR slug LIKE ? OR category LIKE ? OR content LIKE ?)');
+      replacements.push(keyword, keyword, keyword, keyword);
+    }
+
+    if (category && category !== 'all') {
+      where.push('LOWER(category) = LOWER(?)');
+      replacements.push(category);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countResult = pagination
+      ? await sequelize.query(`SELECT COUNT(*) AS total FROM news ${whereClause}`, { replacements, type: QueryTypes.SELECT })
+      : [{ total: 0 }];
+    const dataReplacements = [...replacements];
+    const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+    if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
     const news = await sequelize.query(
-      `SELECT * FROM news ${whereClause} ORDER BY createdAt DESC`,
-      { type: QueryTypes.SELECT }
+      `SELECT * FROM news ${whereClause} ORDER BY createdAt DESC${paginationSql}`,
+      { replacements: dataReplacements, type: QueryTypes.SELECT }
     );
-    res.json(news);
+    sendListResponse(res, news, pagination, countResult[0]?.total);
   } catch (error) {
     serverError(res, error);
   }

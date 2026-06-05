@@ -7,6 +7,7 @@ const {
   removeFile,
   serverError,
 } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueName = async (name, ignoreId = null) => {
   const replacements = ignoreId ? [name, ignoreId] : [name];
@@ -23,14 +24,52 @@ const ensureUniqueName = async (name, ignoreId = null) => {
 // @access  Public
 const getAllProducts = async (req, res) => {
   try {
+    const pagination = getPagination(req.query);
+    const replacements = [];
+    const where = [];
+    const search = String(req.query.search || '').trim();
+    const category = String(req.query.category || '').trim();
+
+    if (search) {
+      const keyword = `%${search}%`;
+      where.push('(p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ?)');
+      replacements.push(keyword, keyword, keyword);
+    }
+
+    if (req.query.categoryId === 'unassigned') {
+      where.push('p.categoryId IS NULL');
+    } else if (req.query.categoryId && req.query.categoryId !== 'all') {
+      where.push('p.categoryId = ?');
+      replacements.push(req.query.categoryId);
+    }
+
+    if (category && category !== 'all') {
+      where.push('LOWER(c.name) = LOWER(?)');
+      replacements.push(category);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countResult = pagination
+      ? await sequelize.query(
+        `SELECT COUNT(*) AS total
+         FROM products p
+         LEFT JOIN categories c ON p.categoryId = c.id
+         ${whereClause}`,
+        { replacements, type: QueryTypes.SELECT }
+      )
+      : [{ total: 0 }];
+    const dataReplacements = [...replacements];
+    const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+    if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
     const products = await sequelize.query(
       `SELECT p.*, c.name as category_name 
        FROM products p 
        LEFT JOIN categories c ON p.categoryId = c.id 
-       ORDER BY p.createdAt DESC`,
-      { type: QueryTypes.SELECT }
+       ${whereClause}
+       ORDER BY p.createdAt DESC${paginationSql}`,
+      { replacements: dataReplacements, type: QueryTypes.SELECT }
     );
-    res.json(products);
+    sendListResponse(res, products, pagination, countResult[0]?.total);
   } catch (error) {
     serverError(res, error);
   }

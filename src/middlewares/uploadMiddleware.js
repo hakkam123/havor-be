@@ -6,6 +6,7 @@ const uploadRoot = path.join(__dirname, '../../uploads');
 const uploadFolders = {
   news: 'news',
   banners: 'banners',
+  campaigns: 'campaigns',
   careers: 'careers',
   applications: 'career-applications',
   clients: 'clients',

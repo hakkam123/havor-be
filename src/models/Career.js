@@ -17,8 +17,16 @@ const Career = sequelize.define('Career', {
 
     },
     job_description: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false
+    },
+    categoryId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'categories',
+            key: 'id'
+        }
     },
 }, {
     tableName: 'careers',

@@ -2,6 +2,7 @@ const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const { sendContactEmails } = require('../services/emailService');
 const { notFound, serverError } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 // @desc    Submit contact message
 // @route   POST /api/contact
@@ -43,11 +44,36 @@ const submitMessage = async (req, res) => {
 // @access  Private/Admin
 const getMessages = async (req, res) => {
   try {
+    const pagination = getPagination(req.query);
+    const replacements = [];
+    const where = [];
+    const search = String(req.query.search || '').trim();
+    const status = String(req.query.status || 'all').toLowerCase();
+
+    if (status === 'unread') {
+      where.push('is_read = 0');
+    } else if (status === 'read') {
+      where.push('is_read = 1');
+    }
+
+    if (search) {
+      const keyword = `%${search}%`;
+      where.push('(name LIKE ? OR email LIKE ? OR subject LIKE ? OR message LIKE ?)');
+      replacements.push(keyword, keyword, keyword, keyword);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const countResult = pagination
+      ? await sequelize.query(`SELECT COUNT(*) AS total FROM contact_messages ${whereClause}`, { replacements, type: QueryTypes.SELECT })
+      : [{ total: 0 }];
+    const dataReplacements = [...replacements];
+    const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+    if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
     const messages = await sequelize.query(
-      'SELECT * FROM contact_messages ORDER BY createdAt DESC',
-      { type: QueryTypes.SELECT }
+      `SELECT * FROM contact_messages ${whereClause} ORDER BY createdAt DESC${paginationSql}`,
+      { replacements: dataReplacements, type: QueryTypes.SELECT }
     );
-    res.json(messages);
+    sendListResponse(res, messages, pagination, countResult[0]?.total);
   } catch (error) {
     serverError(res, error);
   }

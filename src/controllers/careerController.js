@@ -11,6 +11,7 @@ const {
     serverError,
     validationError,
 } = require('../utils/apiResponse');
+const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueTitle = async (jobTitle, ignoreId = null) => {
     const replacements = ignoreId ? [jobTitle, ignoreId] : [jobTitle];
@@ -38,11 +39,52 @@ const isStorageProviderError = (error) => {
 // @access  Public
 const getAllCareers = async (req, res) => {
     try {
+        const pagination = getPagination(req.query);
+        const replacements = [];
+        const where = [];
+        const search = String(req.query.search || '').trim();
+        const category = String(req.query.category || '').trim();
+
+        if (search) {
+            const keyword = `%${search}%`;
+            where.push('(careers.job_title LIKE ? OR careers.job_description LIKE ? OR categories.name LIKE ?)');
+            replacements.push(keyword, keyword, keyword);
+        }
+
+        if (req.query.categoryId === 'unassigned') {
+            where.push('careers.categoryId IS NULL');
+        } else if (req.query.categoryId && req.query.categoryId !== 'all') {
+            where.push('careers.categoryId = ?');
+            replacements.push(req.query.categoryId);
+        }
+
+        if (category && category !== 'all') {
+            where.push('LOWER(categories.name) = LOWER(?)');
+            replacements.push(category);
+        }
+
+        const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+        const countResult = pagination
+            ? await sequelize.query(
+                `SELECT COUNT(*) AS total
+                 FROM careers
+                 LEFT JOIN categories ON careers.categoryId = categories.id
+                 ${whereClause}`,
+                { replacements, type: QueryTypes.SELECT }
+            )
+            : [{ total: 0 }];
+        const dataReplacements = [...replacements];
+        const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+        if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
         const careers = await sequelize.query(
-            'SELECT * FROM careers ORDER BY job_title ASC',
-            { type: QueryTypes.SELECT }
+            `SELECT careers.*, categories.name AS category_name
+             FROM careers
+             LEFT JOIN categories ON careers.categoryId = categories.id
+             ${whereClause}
+             ORDER BY job_title ASC${paginationSql}`,
+            { replacements: dataReplacements, type: QueryTypes.SELECT }
         );
-        res.json(careers);
+        sendListResponse(res, careers, pagination, countResult[0]?.total);
     } catch (error) {
         serverError(res, error);
     }
@@ -53,9 +95,33 @@ const getAllCareers = async (req, res) => {
 // @access  Private/Admin
 const getCareerApplications = async (req, res) => {
     try {
+        const pagination = getPagination(req.query);
+        const replacements = [];
+        const where = [];
+        const search = String(req.query.search || '').trim();
+        const status = String(req.query.status || '').trim();
+
+        if (search) {
+            const keyword = `%${search}%`;
+            where.push('(full_name LIKE ? OR email LIKE ? OR phone LIKE ? OR position LIKE ? OR latest_education LIKE ?)');
+            replacements.push(keyword, keyword, keyword, keyword, keyword);
+        }
+
+        if (status && status !== 'all') {
+            where.push('LOWER(status) = LOWER(?)');
+            replacements.push(status);
+        }
+
+        const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+        const countResult = pagination
+            ? await sequelize.query(`SELECT COUNT(*) AS total FROM career_applications ${whereClause}`, { replacements, type: QueryTypes.SELECT })
+            : [{ total: 0 }];
+        const dataReplacements = [...replacements];
+        const paginationSql = pagination ? ' LIMIT ? OFFSET ?' : '';
+        if (pagination) dataReplacements.push(pagination.limit, pagination.offset);
         const applications = await sequelize.query(
-            'SELECT * FROM career_applications ORDER BY createdAt DESC',
-            { type: QueryTypes.SELECT }
+            `SELECT * FROM career_applications ${whereClause} ORDER BY createdAt DESC${paginationSql}`,
+            { replacements: dataReplacements, type: QueryTypes.SELECT }
         );
 
         const applicationsWithResumeLinks = await Promise.all(applications.map(async (application) => {
@@ -75,7 +141,7 @@ const getCareerApplications = async (req, res) => {
             }
         }));
 
-        res.json(applicationsWithResumeLinks);
+        sendListResponse(res, applicationsWithResumeLinks, pagination, countResult[0]?.total);
     } catch (error) {
         serverError(res, error);
     }
@@ -203,7 +269,7 @@ const submitCareerApplication = async (req, res) => {
 // @route   POST /api/careers
 // @access  Private/Admin
 const createCareer = async (req, res) => {
-    const { job_title, job_description } = req.body;
+    const { job_title, job_description, categoryId } = req.body;
     const thumbnail = req.file ? `/uploads/careers/${req.file.filename}` : null;
     
     try {
@@ -213,13 +279,13 @@ const createCareer = async (req, res) => {
         }
 
         const result = await sequelize.query(
-            'INSERT INTO careers (thumbnail, job_title, job_description, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
+            'INSERT INTO careers (thumbnail, job_title, job_description, categoryId, createdAt, updatedAt) VALUES (?, ?, ?, ?, NOW(), NOW())',
             {
-                replacements: [thumbnail, job_title, job_description],
+                replacements: [thumbnail, job_title, job_description, categoryId || null],
                 type: QueryTypes.INSERT
             }
         );
-        res.status(201).json({ id: result[0], thumbnail, job_title, job_description });
+        res.status(201).json({ id: result[0], thumbnail, job_title, job_description, categoryId: categoryId || null });
     } catch (error) {
         cleanupUploadedFile(req);
         serverError(res, error);
@@ -230,7 +296,7 @@ const createCareer = async (req, res) => {
 // @route   PUT /api/careers/:id
 // @access  Private/Admin
 const updateCareer = async (req, res) => {
-    const { job_title, job_description } = req.body;
+    const { job_title, job_description, categoryId } = req.body;
     const { id } = req.params;
     let thumbnail = null;
 
@@ -258,13 +324,13 @@ const updateCareer = async (req, res) => {
         }
 
         await sequelize.query(
-            'UPDATE careers SET thumbnail = ?, job_title = ?, job_description = ?, updatedAt = NOW() WHERE id = ?',
+            'UPDATE careers SET thumbnail = ?, job_title = ?, job_description = ?, categoryId = ?, updatedAt = NOW() WHERE id = ?',
             {
-                replacements: [thumbnail, job_title, job_description, id],
+                replacements: [thumbnail, job_title, job_description, categoryId || null, id],
                 type: QueryTypes.UPDATE
             }
         );
-        res.json({ message: 'Career updated successfully' });
+        res.json({ id: Number(id), thumbnail, job_title, job_description, categoryId: categoryId || null, message: 'Career updated successfully' });
     } catch (error) {
         cleanupUploadedFile(req);
         serverError(res, error);
