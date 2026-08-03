@@ -3,9 +3,9 @@ const { sequelize } = require('../config/database');
 
 const CareerApplication = sequelize.define('CareerApplication', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   full_name: {
     type: DataTypes.STRING,

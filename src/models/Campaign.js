@@ -4,9 +4,9 @@ const slugify = require('slugify');
 
 const Campaign = sequelize.define('Campaign', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   title: {
     type: DataTypes.STRING,

@@ -3,9 +3,9 @@ const { sequelize } = require('../config/database');
 
 const Career = sequelize.define('Career', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
-        autoIncrement: true,
     },
     thumbnail: {
         type: DataTypes.STRING,
@@ -21,7 +21,7 @@ const Career = sequelize.define('Career', {
         allowNull: false
     },
     categoryId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: true,
         references: {
             model: 'categories',

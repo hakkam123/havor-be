@@ -3,9 +3,9 @@ const { sequelize } = require('../config/database');
 
 const HeroBanner = sequelize.define('HeroBanner', {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
   page_name: {
     type: DataTypes.STRING,

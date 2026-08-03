@@ -8,6 +8,7 @@ const {
   removeFile,
   serverError,
 } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const makeSlug = (title) => slugify(title || '', { lower: true, strict: true });
@@ -99,16 +100,17 @@ const createCampaign = async (req, res) => {
       return conflictError(res, 'title', 'A campaign with this title already exists');
     }
 
-    const [result] = await sequelize.query(
-      `INSERT INTO campaigns (title, slug, content, category, is_published, image_url, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+    const id = createId();
+    await sequelize.query(
+      `INSERT INTO campaigns (id, title, slug, content, category, is_published, image_url, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       {
-        replacements: [title, slug, content, category, published, image_url],
+        replacements: [id, title, slug, content, category, published, image_url],
         type: QueryTypes.INSERT,
       }
     );
 
-    res.status(201).json({ id: result, title, slug, content, category, is_published: !!published, image_url });
+    res.status(201).json({ id, title, slug, content, category, is_published: !!published, image_url });
   } catch (error) {
     cleanupUploadedFile(req);
     serverError(res, error);
@@ -175,7 +177,7 @@ const updateCampaign = async (req, res) => {
     );
 
     res.json({
-      id: Number(req.params.id),
+      id: req.params.id,
       title: title || campaign.title,
       slug,
       content: content || campaign.content,

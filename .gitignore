@@ -4,3 +4,5 @@ uploads/
 projects.zip
 npm-debug.log*
 *.log
+docker-compose.yml
+

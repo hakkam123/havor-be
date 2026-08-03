@@ -9,6 +9,7 @@ const {
   serverError,
   validationError,
 } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 // @desc    Get all banners
@@ -111,15 +112,16 @@ const upsertBanner = async (req, res) => {
     } else {
       // Create
       const type = media_type || (req.file ? (req.file.mimetype.startsWith('video') ? 'video' : 'image') : 'image');
-      const [result] = await sequelize.query(
-        `INSERT INTO hero_banners (page_name, title, subtitle, media_url, media_type, createdAt, updatedAt) 
-         VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+      const id = createId();
+      await sequelize.query(
+        `INSERT INTO hero_banners (id, page_name, title, subtitle, media_url, media_type, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
         {
-          replacements: [page_name, title, subtitle, media_url, type],
+          replacements: [id, page_name, title, subtitle, media_url, type],
           type: QueryTypes.INSERT
         }
       );
-      res.status(201).json({ id: result, page_name, title, subtitle, media_url, media_type: type });
+      res.status(201).json({ id, page_name, title, subtitle, media_url, media_type: type });
     }
   } catch (error) {
     cleanupUploadedFile(req);

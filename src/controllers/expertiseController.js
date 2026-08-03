@@ -7,6 +7,7 @@ const {
   removeFile,
   serverError,
 } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueName = async (name, ignoreId = null) => {
@@ -64,15 +65,16 @@ const createExpertise = async (req, res) => {
       return conflictError(res, 'name', 'Expertise name already exists');
     }
 
-    const [result] = await sequelize.query(
-      `INSERT INTO expertises (name, description, icon_url, createdAt, updatedAt) 
-       VALUES (?, ?, ?, NOW(), NOW())`,
+    const id = createId();
+    await sequelize.query(
+      `INSERT INTO expertises (id, name, description, icon_url, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, NOW(), NOW())`,
       {
-        replacements: [name, description, icon_url],
+        replacements: [id, name, description, icon_url],
         type: QueryTypes.INSERT
       }
     );
-    res.status(201).json({ id: result, name, description, icon_url });
+    res.status(201).json({ id, name, description, icon_url });
   } catch (error) {
     cleanupUploadedFile(req);
     serverError(res, error);

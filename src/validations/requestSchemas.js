@@ -1,7 +1,9 @@
 const { Joi } = require('../middlewares/securityMiddleware');
 
+const uuid = Joi.string().guid({ version: ['uuidv1', 'uuidv4'] });
+
 const idParam = Joi.object({
-  id: Joi.number().integer().positive().required(),
+  id: uuid.required(),
 });
 
 const auth = {
@@ -108,13 +110,13 @@ const product = {
     name: Joi.string().trim().min(2).max(255).required(),
     description: Joi.string().trim().min(1).max(100000).required(),
     external_link: Joi.string().uri({ scheme: ['http', 'https'] }).max(2048).allow('', null),
-    categoryId: Joi.number().integer().positive().empty('').allow(null),
+    categoryId: uuid.empty('').allow(null),
   }),
   update: Joi.object({
     name: Joi.string().trim().min(2).max(255),
     description: Joi.string().trim().min(1).max(100000),
     external_link: Joi.string().uri({ scheme: ['http', 'https'] }).max(2048).allow('', null),
-    categoryId: Joi.number().integer().positive().empty('').allow(null),
+    categoryId: uuid.empty('').allow(null),
   }),
 };
 
@@ -124,14 +126,14 @@ const work = {
     description: Joi.string().trim().max(100000).allow('', null),
     client: Joi.string().trim().max(255).allow('', null),
     year: Joi.number().integer().min(1900).max(2100).empty('').allow(null),
-    categoryId: Joi.number().integer().positive().empty('').allow(null),
+    categoryId: uuid.empty('').allow(null),
   }),
   update: Joi.object({
     title: Joi.string().trim().min(2).max(255),
     description: Joi.string().trim().max(100000).allow('', null),
     client: Joi.string().trim().max(255).allow('', null),
     year: Joi.number().integer().min(1900).max(2100).empty('').allow(null),
-    categoryId: Joi.number().integer().positive().empty('').allow(null),
+    categoryId: uuid.empty('').allow(null),
   }),
 };
 
@@ -139,12 +141,12 @@ const career = {
   create: Joi.object({
     job_title: Joi.string().trim().min(2).max(255).required(),
     job_description: Joi.string().trim().min(1).max(100000).required(),
-    categoryId: Joi.number().integer().positive().empty('').allow(null),
+    categoryId: uuid.empty('').allow(null),
   }),
   update: Joi.object({
     job_title: Joi.string().trim().min(2).max(255).required(),
     job_description: Joi.string().trim().min(1).max(100000).required(),
-    categoryId: Joi.number().integer().positive().empty('').allow(null),
+    categoryId: uuid.empty('').allow(null),
   }),
   application: Joi.object({
     fullName: Joi.string().trim().min(2).max(255).required().messages({

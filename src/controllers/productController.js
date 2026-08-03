@@ -7,6 +7,7 @@ const {
   removeFile,
   serverError,
 } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueName = async (name, ignoreId = null) => {
@@ -87,15 +88,16 @@ const createProduct = async (req, res) => {
       return conflictError(res, 'name', 'Product name already exists');
     }
 
-    const [result] = await sequelize.query(
-      `INSERT INTO products (name, description, image_url, external_link, categoryId, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+    const id = createId();
+    await sequelize.query(
+      `INSERT INTO products (id, name, description, image_url, external_link, categoryId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       {
-        replacements: [name, description, image_url, external_link, categoryId || null],
+        replacements: [id, name, description, image_url, external_link, categoryId || null],
         type: QueryTypes.INSERT
       }
     );
-    res.status(201).json({ id: result, name, description, image_url, external_link, categoryId });
+    res.status(201).json({ id, name, description, image_url, external_link, categoryId });
   } catch (error) {
     cleanupUploadedFile(req);
     serverError(res, error);

@@ -11,6 +11,7 @@ const {
     serverError,
     validationError,
 } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const ensureUniqueTitle = async (jobTitle, ignoreId = null) => {
@@ -278,14 +279,15 @@ const createCareer = async (req, res) => {
             return conflictError(res, 'job_title', 'Career title already exists');
         }
 
-        const result = await sequelize.query(
-            'INSERT INTO careers (thumbnail, job_title, job_description, categoryId, createdAt, updatedAt) VALUES (?, ?, ?, ?, NOW(), NOW())',
+        const id = createId();
+        await sequelize.query(
+            'INSERT INTO careers (id, thumbnail, job_title, job_description, categoryId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
             {
-                replacements: [thumbnail, job_title, job_description, categoryId || null],
+                replacements: [id, thumbnail, job_title, job_description, categoryId || null],
                 type: QueryTypes.INSERT
             }
         );
-        res.status(201).json({ id: result[0], thumbnail, job_title, job_description, categoryId: categoryId || null });
+        res.status(201).json({ id, thumbnail, job_title, job_description, categoryId: categoryId || null });
     } catch (error) {
         cleanupUploadedFile(req);
         serverError(res, error);
@@ -330,7 +332,7 @@ const updateCareer = async (req, res) => {
                 type: QueryTypes.UPDATE
             }
         );
-        res.json({ id: Number(id), thumbnail, job_title, job_description, categoryId: categoryId || null, message: 'Career updated successfully' });
+        res.json({ id, thumbnail, job_title, job_description, categoryId: categoryId || null, message: 'Career updated successfully' });
     } catch (error) {
         cleanupUploadedFile(req);
         serverError(res, error);

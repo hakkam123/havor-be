@@ -2,6 +2,7 @@ const { sequelize } = require('../config/database');
 const { QueryTypes } = require('sequelize');
 const { sendContactEmails } = require('../services/emailService');
 const { notFound, serverError } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 // @desc    Submit contact message
@@ -10,11 +11,12 @@ const { getPagination, sendListResponse } = require('../utils/pagination');
 const submitMessage = async (req, res) => {
   const { name, email, subject, message } = req.body;
   try {
-    const [result] = await sequelize.query(
-      `INSERT INTO contact_messages (name, email, subject, message, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, NOW(), NOW())`,
+    const id = createId();
+    await sequelize.query(
+      `INSERT INTO contact_messages (id, name, email, subject, message, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
       {
-        replacements: [name, email, subject, message],
+        replacements: [id, name, email, subject, message],
         type: QueryTypes.INSERT
       }
     );
@@ -27,7 +29,7 @@ const submitMessage = async (req, res) => {
       success: true,
       message: 'Your message has been sent successfully. Please wait while our team reviews your submission. We will contact you by email.',
       data: {
-        id: result,
+        id,
         email: {
           sender: emailStatus.userEmail.sent,
           admin: emailStatus.adminEmail.sent,

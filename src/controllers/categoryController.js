@@ -7,6 +7,7 @@ const {
   relationError,
   serverError,
 } = require('../utils/apiResponse');
+const { createId } = require('../utils/id');
 const { getPagination, sendListResponse } = require('../utils/pagination');
 
 const categoryTypes = ['News', 'Career', 'Campaign', 'Product'];
@@ -62,14 +63,15 @@ const createCategory = async (req, res) => {
   const { name } = req.body;
   const type = normalizeType(req.body.type);
   try {
-    const result = await sequelize.query(
-      'INSERT INTO categories (name, type, createdAt, updatedAt) VALUES (?, ?, NOW(), NOW())',
+    const id = createId();
+    await sequelize.query(
+      'INSERT INTO categories (id, name, type, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
       {
-        replacements: [name, type],
+        replacements: [id, name, type],
         type: QueryTypes.INSERT
       }
     );
-    res.status(201).json({ id: result[0], name, type });
+    res.status(201).json({ id, name, type });
   } catch (error) {
     if (isDuplicateEntry(error)) {
       return conflictError(res, 'name', 'Category name already exists for this type');
@@ -101,7 +103,7 @@ const updateCategory = async (req, res) => {
         type: QueryTypes.UPDATE
       }
     );
-    res.json({ id: Number(id), name, type, message : 'Category updated successfully' });
+    res.json({ id, name, type, message : 'Category updated successfully' });
   } catch (error) {
     if (isDuplicateEntry(error)) {
       return conflictError(res, 'name', 'Category name already exists for this type');
